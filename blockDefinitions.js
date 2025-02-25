@@ -55,6 +55,20 @@ window.blockDefinitions = {
         };
       },
     },
+
+    prompt: {
+        block_type: "normal",
+        format: ["Prompt", "input1"],
+        input1_default: "Hello world!",
+        execute: (inputs, childData, depth) => {
+          const code = `window.propmt(${JSON.stringify(inputs.input1)});`;
+          return {
+            realCode: code,
+            displayCode: code
+          };
+        },
+      },
+
     repeat: {
       block_type: "c-block",
       format: ["Repeat"],
