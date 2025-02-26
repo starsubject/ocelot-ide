@@ -1,76 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Ocelot Block Engine (Global Safety + Costume Manager)</title>
-  <link rel="stylesheet" href="style.css">
-
-  <!-- Polyfill for mobile drag & drop (mobile devices) -->
-   <!-- sora was here-->
-  <script src="https://cdn.jsdelivr.net/gh/Bernardo-Castilho/dragdroptouch@1.27/DragDropTouch.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ocelot-IDE - Access</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+        .login-box {
+            background: white;
+            padding: 20px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            text-align: center;
+        }
+        input {
+            padding: 10px;
+            margin-top: 10px;
+            width: 200px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-<button class="upload-button">
-  <a href="https://script.google.com/macros/s/AKfycbyMFpA-Eusg-DzksvbHQrjK6uSvm3zQ6j0W2HdREgfvq5ORJY6ciW5sr3emwKRtUQuT/exec">
-    Upload project
-  </a>
-</button>
-
-<!-- Main Container: Toolbox | Workspace | Canvas -->
-<div id="app-container">
-  <!-- Left: Toolbox -->
-  <div id="block-menu">
-    <h3>Blocks</h3>
-    <!-- Blocks will be appended here -->
-  </div>
-
-  <!-- Middle: Workspace -->
-  <div id="workspace-container">
-    <h3>Workspace</h3>
-    <div id="workspace"
-         ondragover="event.preventDefault();"
-         ondrop="dropBlock(event, document.getElementById('workspace'))">
+    <div class="login-box">
+        <h2>Enter Access Code</h2>
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="checkPassword()">Submit</button>
+        <p id="error-message" style="color: red; display: none;">Incorrect Password</p>
     </div>
-    <button class="run-button" onclick="executeBlocks()">Run</button>
-    <h3>Generated Code</h3>
-    <pre id="generated-code"></pre>
-  </div>
 
-  <!-- Right: Graphical Canvas -->
-  <div id="canvas-container">
-    <h3>Graphical Output</h3>
-    <canvas id="graphics-canvas" width="640" height="360"></canvas>
-  </div>
-</div>
+    <script>
+        function checkPassword() {
+            const correctPassword = "OCELOT2025";  // CHANGE THIS
+            const userInput = document.getElementById("password").value;
 
-<!-- Button to open the Costume Manager (normal "Manage Costumes" mode) -->
-<button id="open-costume-manager" class="upload-button">
-  Manage Costumes
-</button>
-
-<!-- The Costume Manager Modal (hidden at first) -->
-<div id="costume-manager" class="hidden">
-  <div class="manager-content">
-    <h2>Costume Manager</h2>
-
-    <!-- Thumbnails container -->
-    <div id="costume-list"></div>
-
-    <!-- Button to add a new costume -->
-    <button id="add-costume-btn" class="upload-button">Add Costume</button>
-    <!-- Button to close modal -->
-    <button id="close-costume-btn" class="close-button">Close</button>
-  </div>
-</div>
-  
-<button class="upload-button" onclick="saveProject()">Save Project (Copy URL)</button>
-
-<!-- 
-     Load the blockDefinitions.js FIRST (so that window.blockDefinitions is ready),
-     then load main.js which references window.blockDefinitions 
--->
-<script src="blockDefinitions.js"></script>
-<script src="main.js"></script>
+            if (userInput === correctPassword) {
+                window.location.href = "editor.html";
+            } else {
+                document.getElementById("error-message").style.display = "block";
+            }
+        }
+    </script>
 </body>
 </html>
