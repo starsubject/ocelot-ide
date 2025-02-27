@@ -222,9 +222,18 @@ function getInputs(block) {
     // Check if there's a reporter block in this wrapper
     const reporterBlock = wrapper.querySelector(".workspace-reporter");
     if (reporterBlock) {
-      // Evaluate the reporter block to get 'realCode'
-      const { realCode, displayCode } = executeBlock(reporterBlock);
-      inputs[inputName] = realCode;
+      // If the parent is a C-block (like Repeat/Forever), 
+      // we IGNORE the reporter block so it doesn't overwrite our typed value.
+      const parentDef = blockDefinitions[block.dataset.blockType] || {};
+      if (parentDef.block_type === "c-block") {
+        // Use the text input's own value
+        const textInput = wrapper.querySelector("input");
+        inputs[inputName] = textInput ? textInput.value : "";
+      } else {
+        // Otherwise, treat the reporter's code as the input
+        const { realCode } = executeBlock(reporterBlock);
+        inputs[inputName] = realCode;
+      }
     } else {
       // Otherwise, treat it like a normal text input
       const textInput = wrapper.querySelector("input");
@@ -451,6 +460,7 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
       const inputField = document.createElement("input");
       inputField.type = "text";
       inputField.className = "input-field";
+      // Show default, e.g. "3"
       inputField.value = blockData.input1_default;
       inputField.dataset.inputName = "input1";
       inputWrapper.appendChild(inputField);

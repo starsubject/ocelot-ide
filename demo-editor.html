@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Ocelot Block Engine (Global Safety + Costume Manager)</title>
   <link rel="stylesheet" href="style.css">
-
-  <!-- Polyfill for mobile drag & drop (mobile devices) -->
-   <!-- sora was here-->
   <script src="https://cdn.jsdelivr.net/gh/Bernardo-Castilho/dragdroptouch@1.27/DragDropTouch.js"></script>
 </head>
 <body>
@@ -17,15 +14,14 @@
   </a>
 </button>
 
-<!-- Main Container: Toolbox | Workspace | Canvas -->
+
 <div id="app-container">
-  <!-- Left: Toolbox -->
+  
   <div id="block-menu">
     <h3>Blocks</h3>
-    <!-- Blocks will be appended here -->
+    
   </div>
-
-  <!-- Middle: Workspace -->
+ 
   <div id="workspace-container">
     <h3>Workspace</h3>
     <div id="workspace"
@@ -37,40 +33,35 @@
     <pre id="generated-code"></pre>
   </div>
 
-  <!-- Right: Graphical Canvas -->
+  
   <div id="canvas-container">
     <h3>Graphical Output</h3>
     <canvas id="graphics-canvas" width="640" height="360"></canvas>
   </div>
 </div>
 
-<!-- Button to open the Costume Manager (normal "Manage Costumes" mode) -->
 <button id="open-costume-manager" class="upload-button">
   Manage Costumes
 </button>
 
-<!-- The Costume Manager Modal (hidden at first) -->
+
 <div id="costume-manager" class="hidden">
   <div class="manager-content">
     <h2>Costume Manager</h2>
 
-    <!-- Thumbnails container -->
+    
     <div id="costume-list"></div>
-
-    <!-- Button to add a new costume -->
+ 
     <button id="add-costume-btn" class="upload-button">Add Costume</button>
-    <!-- Button to close modal -->
+    
     <button id="close-costume-btn" class="close-button">Close</button>
   </div>
 </div>
   
 <button class="upload-button" onclick="saveProject()">Save Project (Copy URL)</button>
 
-<!-- 
-     Load the blockDefinitions.js FIRST (so that window.blockDefinitions is ready),
-     then load main.js which references window.blockDefinitions 
--->
-<script src="blockDefinitions.js"></script>
-<script src="main.js"></script>
+
+<script src="blockDefinitions.js"></script> <!-- Dictionary for all blocks and their actions -->
+<script src="main.js"></script> <!-- Initiate main block coding engine -->
 </body>
 </html>
