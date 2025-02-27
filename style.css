@@ -13,21 +13,19 @@
     background-color: #f9f9f9;
     color: #333;
     display: flex;
-    flex-direction: column; /* Stack top-to-bottom if needed */
-    align-items: stretch;   /* Stretch child (#app-container) to full width */
+    flex-direction: column;
+    align-items: stretch;
   }
-  /* Ensure #app-container fits within the viewport */
   #app-container {
     display: flex;
     flex: 1;
-    flex-direction: row; /* Keep side-by-side layout */
+    flex-direction: row;
     gap: 10px;
     padding: 10px;
-    height: 100vh; /* Ensure it fits on all screens */
-    overflow: hidden; /* Prevent scrolling issues */
-    flex-wrap: nowrap; /* Prevent stacking */
+    height: 100vh; 
+    overflow: hidden;
+    flex-wrap: nowrap;
   }
-  
   
   /* =============================
      2) LEFT (Toolbox), MIDDLE (Workspace), RIGHT (Canvas)
@@ -41,11 +39,11 @@
     background-color: #f4f4f4;
     box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
     padding: 10px;
-    overflow-y: auto;  /* Scroll if many blocks */
-    min-width: 150px;  /* Prevent too narrow on resize */
+    overflow-y: auto;  
+    min-width: 150px; 
   }
   #block-menu h3 {
-    margin-top: 0; 
+    margin-top: 0;
     text-align: center;
     border-bottom: 2px solid rgba(0,0,0,0.1);
     padding-bottom: 5px;
@@ -64,14 +62,14 @@
     min-width: 300px;
   }
   #workspace-container h3 {
-    margin-top: 0; 
+    margin-top: 0;
     text-align: center;
     border-bottom: 2px solid rgba(0,0,0,0.1);
     padding-bottom: 5px;
     width: 100%;
   }
   #workspace {
-    flex: 1; 
+    flex: 1;
     width: 100%;
     margin-bottom: 10px;
     border: 2px solid #000;
@@ -87,9 +85,9 @@
   #generated-code {
     width: 100%;
     min-height: 120px;
-    resize: vertical; /* user can drag the bottom edge */
+    resize: vertical;
     overflow: auto;
-    align-self: flex-start; /* so it can expand downward */
+    align-self: flex-start;
     border: 2px solid black;
     padding: 5px;
     font-size: 12px;
@@ -107,11 +105,11 @@
     background-color: #f4f4f4;
     box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
     padding: 10px;
-    min-width: 400px; /* Enough width for 640x360 canvas + margin */
-    overflow: hidden; /* Hide scroll if content fits */
+    min-width: 400px;
+    overflow: hidden;
   }
   #canvas-container h3 {
-    margin-top: 0; 
+    margin-top: 0;
     text-align: center;
     border-bottom: 2px solid rgba(0,0,0,0.1);
     padding-bottom: 5px;
@@ -126,41 +124,69 @@
     border-radius: 5px;
   }
   
-  
   /* =============================
      3) BLOCKS & DRAGGABLE ITEMS
      ============================= */
+  
+  /* 
+     For normal/stack blocks (both .block from toolbox and .workspace-block in the workspace): 
+     - We use a background image referencing the puzzle shape from scratchblocks.svg
+     - We'll fix a size to match that shape (e.g., 300×80).
+  */
   .block,
   .workspace-block {
-    padding: 12px 18px;
+    position: relative;
     margin: 5px;
-    font-size: 16px;
-    font-weight: bold;
-    border-radius: 8px;
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-    transition: 0.2s;
-    display: inline-flex;
-    align-items: center;
+    display: inline-block; /* so multiple blocks can line up */
     user-select: none;
     cursor: grab;
-    position: relative; /* so puzzle styling can anchor if needed */
-  }
-  /* Toolbox blocks (blue-ish) */
-  .block {
-    background-color: #6ec6ff;
-  }
-  .block:hover {
-    background-color: #5aaee7;
-  }
-  /* Workspace blocks (green-ish) */
-  .workspace-block {
-    background-color: #8fe88f;
-  }
-  .workspace-block:hover {
-    background-color: #7ed07e;
+    /* If you want them tinted differently in the toolbox vs workspace, 
+       you can keep different backgrounds or filter. 
+       For now, let's keep them the same. */
+  
+    /* We'll define the size to match your puzzle’s aspect ratio. 
+       Adjust as needed. */
+    width: 300px;  
+    height: 80px;
+  
+    /* This is the actual puzzle background from your SVG */
+    background: url("PATH/TO/scratchblocks.svg") no-repeat center center;
+    /* Make it fill the 300×80 area. 
+       If the SVG is a different ratio, use background-size: contain; or cover. */
+    background-size: 100% 100%;
+  
+    /* Optionally add a small box-shadow for depth. */
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
   }
   
-  /* C-Blocks (like repeat, forever) (yellow) */
+  /* If you want a different color for blocks in the workspace vs toolbox: */
+  .block {
+    /* e.g. a hue-rotate filter or different .svg? 
+       We'll skip for now. */
+  }
+  .workspace-block {
+    /* Same puzzle shape, could be a different background if you prefer. */
+  }
+  
+  /* 
+     Overlaid label text for a block: 
+     We'll assume you place a <span> inside .block or .workspace-block 
+     for the block's text. Make it absolutely positioned inside the container.
+  */
+  .block > span,
+  .workspace-block > span {
+    position: absolute;
+    top: 50%; 
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;  /* or black if your SVG is light */
+    font-weight: bold;
+    font-size: 14px;
+    white-space: nowrap;
+    pointer-events: none; /* Let user drag the block, not select text */
+  }
+  
+  /* C-Blocks (like repeat, forever) remain standard rectangles */
   .c-block {
     background-color: #ffcc00;
     padding: 12px;
@@ -173,8 +199,8 @@
     font-size: 16px;
     font-weight: bold;
     box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    min-width: 200px; /* Just to keep them wide enough to see the content */
   }
-  /* Container inside c-block for nested blocks */
   .c-block .inner {
     min-height: 50px;
     width: 90%;
@@ -261,130 +287,4 @@
   @keyframes errorFlash {
     from { background-color: inherit; }
     to   { background-color: red; }
-  }
-  
-  
-  /* =============================
-     4) COSTUME MANAGER MODAL
-     ============================= */
-  .hidden {
-    display: none;
-  }
-  /* Fullscreen overlay */
-  #costume-manager {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 9999;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5); /* semi-transparent black */
-  }
-  /* Panel in center */
-  #costume-manager .manager-content {
-    background-color: #fefefe;
-    margin: 5% auto;
-    padding: 20px;
-    border: 2px solid #888;
-    border-radius: 8px;
-    width: 500px;
-    max-width: 90%;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  }
-  #costume-manager h2 {
-    margin-top: 0;
-    text-align: center;
-    border-bottom: 2px solid #ccc;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-  }
-  #costume-list {
-    max-height: 300px; 
-    overflow-y: auto;
-    display: flex;
-    flex-wrap: wrp;
-    gap: 10px;
-    justify-content: center;
-    margin-bottom: 20px;
-  }
-  #costume-list img {
-    width: 100px;
-    height: auto;
-    border: 2px solid #ddd;
-    border-radius: 4px;
-    background: #fff;
-    cursor: pointer;
-  }
-  .close-button {
-    background-color: #777;
-    color: white;
-    border: none;
-  }
-  .close-button:hover {
-    background-color: #555;
-  }
-  
-  /* Costume Thumbnail */
-  .costume-item {
-    position: relative;
-    display: inline-block;
-  }
-  
-  /* Delete Button */
-  .delete-costume-btn {
-    position: absolute;
-    top: 0;
-    right: 0;
-    background: red;
-    color: white;
-    border: none;
-    width: 20px;
-    height: 20px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    border-radius: 50%;
-  }
-  .delete-costume-btn:hover {
-    background: darkred;
-  }
-  
-  /* =============================
-     5) PUZZLE-STYLE STACK BLOCKS
-     (Normal & workspace blocks, except c-block)
-     ============================= */
-  /* We want a minimum height for the puzzle notches to be visible */
-  .workspace-block:not(.c-block),
-  .block:not(.c-block) {
-    min-height: 50px; 
-    /* We'll let width auto-adjust to content */
-    display: inline-flex; 
-    align-items: center;
-    position: relative;
-    clip-path: polygon(
-      /* Start top-left corner */
-      0% 0%,
-      /* Move across to the nib */
-      38% 0%,
-      /* nib goes down 12% vertically */
-      38% 12%,
-      46% 12%,
-      46% 0%,
-      /* finish top edge to right corner */
-      100% 0%,
-      100% 100%,
-      /* bottom nib */
-      46% 100%,
-      46% 88%,
-      38% 88%,
-      38% 100%,
-      0% 100%
-    );
-    overflow: hidden; /* so content doesn't spill outside puzzle shape */
-  }
-  /* Slightly enlarge bounding box on hover for a neat effect */
-  .workspace-block:not(.c-block):hover,
-  .block:not(.c-block):hover {
-    transform: scale(1.01);
-    box-shadow: 3px 3px 8px rgba(0,0,0,0.15);
   }
