@@ -63,7 +63,7 @@ window.blockDefinitions = {
 
   repeat: {
     block_type: "c-block",
-    format: ["Repeat"],
+    format: ["Repeat", "input1", "times"],
     input1_default: "3",
     execute: (inputs, childData, depth) => {
       let count = parseInt(inputs.input1, 10);
