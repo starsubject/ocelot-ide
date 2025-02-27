@@ -150,7 +150,7 @@
     height: 80px;
   
     /* This is the actual puzzle background from your SVG */
-    background: url("PATH/TO/scratchblocks.svg") no-repeat center center;
+    background: url("scratchblocks.svg") no-repeat center center;
     /* Make it fill the 300×80 area. 
        If the SVG is a different ratio, use background-size: contain; or cover. */
     background-size: 100% 100%;
