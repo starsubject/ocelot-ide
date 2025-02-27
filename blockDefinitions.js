@@ -63,6 +63,7 @@ window.blockDefinitions = {
 
   repeat: {
     block_type: "c-block",
+    // We'll explicitly show the input with "Repeat", "input1", "times"
     format: ["Repeat", "input1", "times"],
     input1_default: "3",
     execute: (inputs, childData, depth) => {

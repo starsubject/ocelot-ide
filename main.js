@@ -213,37 +213,44 @@ function pickCostume(c) {
    ============================= */
 function getInputs(block) {
   const inputs = {};
-  const inputWrappers = block.querySelectorAll(".input-wrapper");
+
+  // 1) Only get the direct .block-inputs container for this block
+  const parentBlockInputs = block.querySelector(":scope > .block-inputs");
+  if (!parentBlockInputs) return inputs;
+
+  // 2) Within that container, find all .input-wrapper
+  const inputWrappers = parentBlockInputs.querySelectorAll(".input-wrapper");
 
   inputWrappers.forEach(wrapper => {
     const inputName = wrapper.dataset.inputName;
     if (!inputName) return;
 
-    // First, check if there's a non-reporter block dropped here by mistake
-    // (like a normal or c-block). If so, ignore it & just read the text input.
+    // If there's a reporter block inside this wrapper
+    const reporterBlock = wrapper.querySelector(".workspace-reporter");
+
+    // If there's a normal/c-block in the input wrapper by mistake:
     const nonReporter = wrapper.querySelector(".workspace-block, .c-block");
+    const parentDef = blockDefinitions[block.dataset.blockType] || {};
+
+    // If a non-reporter block is in the input wrapper, ignore it & use typed text
     if (nonReporter && !nonReporter.classList.contains("workspace-reporter")) {
       const textInput = wrapper.querySelector("input");
       inputs[inputName] = textInput ? textInput.value : "";
       return;
     }
 
-    // Check if there's a reporter block in this wrapper
-    const reporterBlock = wrapper.querySelector(".workspace-reporter");
+    // If we found a reporter block
     if (reporterBlock) {
-      // If the parent is a C-block (like Repeat/Forever), 
-      // we IGNORE the reporter block so it doesn't overwrite our typed value
-      const parentDef = blockDefinitions[block.dataset.blockType] || {};
+      // If parent is a c-block, ignore reporter
       if (parentDef.block_type === "c-block") {
         const textInput = wrapper.querySelector("input");
         inputs[inputName] = textInput ? textInput.value : "";
       } else {
-        // Otherwise, treat the reporter's code as the input
         const { realCode } = executeBlock(reporterBlock);
         inputs[inputName] = realCode;
       }
     } else {
-      // Otherwise, treat it like a normal text input
+      // Just a normal input
       const textInput = wrapper.querySelector("input");
       inputs[inputName] = textInput ? textInput.value : "";
     }
@@ -260,7 +267,10 @@ function executeBlock(block, depth = 0) {
   const def = blockDefinitions[type];
   if (!def) return { realCode: "", displayCode: "" };
 
+  // Gather "this block's" inputs
   const inputs = getInputs(block);
+
+  // Then gather "child blocks" from the .inner container 
   const childBlocks = block.querySelector(".inner")
     ? [...block.querySelector(".inner").children]
     : [];
@@ -281,12 +291,14 @@ function executeBlocks() {
   let realCodeAll = "let __globalSafetyCount = 0;\n";
   let displayCodeAll = "";
   
+  // Clear the canvas if any
   const canvas = document.getElementById("graphics-canvas");
   if (canvas) {
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
+  // Build up the code from each top-level block
   workspaceBlocks.forEach(block => {
     const { realCode, displayCode } = executeBlock(block, 0);
     realCodeAll += realCode + "\n";
@@ -358,7 +370,7 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
         inputWrapper.ondrop = (e) => {
           e.preventDefault();
           const droppedType = e.dataTransfer.getData("blockType");
-          // if a reporter is dropped here, we nest it
+          // if a reporter is dropped here, nest it
           if (blockDefinitions[droppedType] && blockDefinitions[droppedType].block_type === "reporter") {
             const newReporter = createBlockElement(droppedType, true);
             inputWrapper.innerHTML = "";
