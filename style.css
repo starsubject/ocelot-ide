@@ -1,22 +1,22 @@
 /* =============================
-       1) BASE & LAYOUT STYLES
-       ============================= */
-       html, body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        width: 100%;
-        box-sizing: border-box;
-      }
-      body {
-        font-family: 'Arial', sans-serif;
-        background-color: #f9f9f9;
-        color: #333;
-        display: flex;
-        flex-direction: column; /* Stack top-to-bottom if needed */
-        align-items: stretch;   /* Stretch child (#app-container) to full width */
-      }
-      /* Ensure #app-container fits within the viewport */
+   1) BASE & LAYOUT STYLES
+   ============================= */
+   html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    display: flex;
+    flex-direction: column; /* Stack top-to-bottom if needed */
+    align-items: stretch;   /* Stretch child (#app-container) to full width */
+  }
+  /* Ensure #app-container fits within the viewport */
   /* Let #app-container occupy the entire viewport without breaking on small screens */
   #app-container {
     display: flex;
@@ -30,300 +30,303 @@
   }
   
   
-      /* =============================
-         2) LEFT (Toolbox), MIDDLE (Workspace), RIGHT (Canvas)
-         ============================= */
-      #block-menu {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        border: 2px solid #000;
-        border-radius: 10px;
-        background-color: #f4f4f4;
-        box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-        padding: 10px;
-        overflow-y: auto;  /* Scroll if many blocks */
-        min-width: 150px;  /* Prevent too narrow on resize */
-      }
-      #block-menu h3 {
-        margin-top: 0; 
-        text-align: center;
-        border-bottom: 2px solid rgba(0,0,0,0.1);
-        padding-bottom: 5px;
-      }
+  /* =============================
+     2) LEFT (Toolbox), MIDDLE (Workspace), RIGHT (Canvas)
+     ============================= */
+  #block-menu {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border: 2px solid #000;
+    border-radius: 10px;
+    background-color: #f4f4f4;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+    padding: 10px;
+    overflow-y: auto;  /* Scroll if many blocks */
+    min-width: 150px;  /* Prevent too narrow on resize */
+  }
+  #block-menu h3 {
+    margin-top: 0; 
+    text-align: center;
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+    padding-bottom: 5px;
+  }
   
-      #workspace-container {
-        flex: 2;
-        display: flex;
-        flex-direction: column;
-        /* allow children to stretch or grow */
-        align-items: flex-start;
-        border: 2px solid #000;
-        border-radius: 10px;
-        background-color: #f4f4f4;
-        box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-        padding: 10px;
-        min-width: 300px;
-      }
-      #workspace-container h3 {
-        margin-top: 0; 
-        text-align: center;
-        border-bottom: 2px solid rgba(0,0,0,0.1);
-        padding-bottom: 5px;
-        width: 100%;
-      }
-      #workspace {
-        flex: 1; 
-        width: 100%;
-        margin-bottom: 10px;
-        border: 2px solid #000;
-        background: #f4f4f4;
-        border-radius: 8px;
-        overflow-y: auto;
-      }
-      .run-button {
-        margin-bottom: 10px;
-      }
+  #workspace-container {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    /* allow children to stretch or grow */
+    align-items: flex-start;
+    border: 2px solid #000;
+    border-radius: 10px;
+    background-color: #f4f4f4;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+    padding: 10px;
+    min-width: 300px;
+  }
+  #workspace-container h3 {
+    margin-top: 0; 
+    text-align: center;
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+    padding-bottom: 5px;
+    width: 100%;
+  }
+  #workspace {
+    flex: 1; 
+    width: 100%;
+    margin-bottom: 10px;
+    border: 2px solid #000;
+    background: #f4f4f4;
+    border-radius: 8px;
+    overflow-y: auto;
+  }
+  .run-button {
+    margin-bottom: 10px;
+  }
   
-      /* Resizable code area */
-      #generated-code {
-        width: 100%;
-        min-height: 120px;
-        resize: vertical; /* user can drag the bottom edge */
-        overflow: auto;
-        align-self: flex-start; /* so it can expand downward */
-        border: 2px solid black;
-        padding: 5px;
-        font-size: 12px;
-        background: #eee;
-        border-radius: 8px;
-      }
+  /* Resizable code area */
+  #generated-code {
+    width: 100%;
+    min-height: 120px;
+    resize: vertical; /* user can drag the bottom edge */
+    overflow: auto;
+    align-self: flex-start; /* so it can expand downward */
+    border: 2px solid black;
+    padding: 5px;
+    font-size: 12px;
+    background: #eee;
+    border-radius: 8px;
+  }
   
-      #canvas-container {
-        flex: 3;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        border: 2px solid #000;
-        border-radius: 10px;
-        background-color: #f4f4f4;
-        box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-        padding: 10px;
-        min-width: 400px; /* Enough width for 640x360 canvas + margin */
-        overflow: hidden; /* Hide scroll if content fits */
-      }
-      #canvas-container h3 {
-        margin-top: 0; 
-        text-align: center;
-        border-bottom: 2px solid rgba(0,0,0,0.1);
-        padding-bottom: 5px;
-        width: 100%;
-      }
-      #graphics-canvas {
-        display: block;
-        background: white;
-        border: 2px solid black;
-        width: 640px;
-        height: 360px;
-        border-radius: 5px;
-      }
+  #canvas-container {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 2px solid #000;
+    border-radius: 10px;
+    background-color: #f4f4f4;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+    padding: 10px;
+    min-width: 400px; /* Enough width for 640x360 canvas + margin */
+    overflow: hidden; /* Hide scroll if content fits */
+  }
+  #canvas-container h3 {
+    margin-top: 0; 
+    text-align: center;
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+    padding-bottom: 5px;
+    width: 100%;
+  }
+  #graphics-canvas {
+    display: block;
+    background: white;
+    border: 2px solid black;
+    width: 640px;
+    height: 360px;
+    border-radius: 5px;
+  }
   
-      /* =============================
-         3) BLOCKS & DRAGGABLE ITEMS
-         ============================= */
-      .block,
-      .workspace-block {
-        padding: 12px 18px;
-        margin: 5px;
-        font-size: 16px;
-        font-weight: bold;
-        border-radius: 8px;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-        transition: 0.2s;
-        display: inline-flex;
-        align-items: center;
-        user-select: none;
-        cursor: grab;
-      }
-      /* Toolbox blocks (blue-ish) */
-      .block {
-        background-color: #6ec6ff;
-      }
-      .block:hover {
-        background-color: #5aaee7;
-      }
-      /* Workspace blocks (green-ish) */
-      .workspace-block {
-        background-color: #8fe88f;
-        position: relative;
-      }
-      .workspace-block:hover {
-        background-color: #7ed07e;
-      }
   
-      /* C-Blocks (like repeat, forever) */
-      .c-block {
-        background-color: #ffcc00;
-        padding: 12px;
-        margin: 5px;
-        border-radius: 8px;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        position: relative;
-        font-size: 16px;
-        font-weight: bold;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-      }
-      /* Container inside c-block for nested blocks */
-      .c-block .inner {
-        min-height: 50px;
-        width: 90%;
-        background: #fff;
-        margin: 8px 0;
-        padding: 8px;
-        border: 2px dashed gray;
-        border-radius: 5px;
-      }
+  /* =============================
+     3) BLOCKS & DRAGGABLE ITEMS
+     ============================= */
+  .block,
+  .workspace-block {
+    padding: 12px 18px;
+    margin: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 8px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    user-select: none;
+    cursor: grab;
+    position: relative; /* Needed for puzzle pseudo-elements */
+  }
+  /* Toolbox blocks (blue-ish) */
+  .block {
+    background-color: #6ec6ff;
+  }
+  .block:hover {
+    background-color: #5aaee7;
+  }
+  /* Workspace blocks (green-ish) */
+  .workspace-block {
+    background-color: #8fe88f;
+  }
+  .workspace-block:hover {
+    background-color: #7ed07e;
+  }
   
-      /* Input Fields */
-      .input-field {
-        background: #ffffff;
-        border: 2px solid #ccc;
-        padding: 6px 8px;
-        margin: 0 5px;
-        width: 60px;
-        text-align: center;
-        font-size: 14px;
-        border-radius: 6px;
-        font-weight: bold;
-        color: #333;
-        transition: 0.2s;
-      }
-      .input-field:focus {
-        border-color: #5a99ff;
-        box-shadow: 0 0 4px rgba(90,153,255,0.5);
-        outline: none;
-      }
+  /* C-Blocks (like repeat, forever) (yellow) */
+  .c-block {
+    background-color: #ffcc00;
+    padding: 12px;
+    margin: 5px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+    font-size: 16px;
+    font-weight: bold;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+  }
+  /* Container inside c-block for nested blocks */
+  .c-block .inner {
+    min-height: 50px;
+    width: 90%;
+    background: #fff;
+    margin: 8px 0;
+    padding: 8px;
+    border: 2px dashed gray;
+    border-radius: 5px;
+  }
   
-      /* Delete Button inside workspace blocks */
-      .delete-button {
-        margin-left: auto;
-        background: #ff4d4d;
-        color: white;
-        border: none;
-        padding: 7px;
-        cursor: pointer;
-        font-size: 12px;
-        border-radius: 5px;
-        transition: 0.2s;
-      }
-      .delete-button:hover {
-        background-color: #cc0000;
-      }
+  /* Input Fields */
+  .input-field {
+    background: #ffffff;
+    border: 2px solid #ccc;
+    padding: 6px 8px;
+    margin: 0 5px;
+    width: 60px;
+    text-align: center;
+    font-size: 14px;
+    border-radius: 6px;
+    font-weight: bold;
+    color: #333;
+    transition: 0.2s;
+  }
+  .input-field:focus {
+    border-color: #5a99ff;
+    box-shadow: 0 0 4px rgba(90,153,255,0.5);
+    outline: none;
+  }
   
-      /* Additional Buttons (Run, Clean, etc.) */
-      .run-button, .clean-button, .upload-button {
-        padding: 12px 18px;
-        font-size: 16px;
-        border: none;
-        cursor: pointer;
-        border-radius: 6px;
-        transition: 0.2s;
-        font-weight: bold;
-        margin-bottom: 10px;
-      }
-      .run-button {
-        background-color: #4CAF50;
-        color: white;
-      }
-      .run-button:hover {
-        background-color: #388E3C;
-      }
-      .clean-button {
-        background-color: #FF9800;
-        color: white;
-      }
-      .clean-button:hover {
-        background-color: #E65100;
-      }
-      .upload-button {
-        background-color: #2196F3;
-        color: white;
-      }
-      .upload-button:hover {
-        background-color: #0b7dda;
-      }
+  /* Delete Button inside workspace blocks */
+  .delete-button {
+    margin-left: auto;
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 7px;
+    cursor: pointer;
+    font-size: 12px;
+    border-radius: 5px;
+    transition: 0.2s;
+  }
+  .delete-button:hover {
+    background-color: #cc0000;
+  }
   
-      /* Highlighting for error blocks */
-      .error-highlight {
-        animation: errorFlash 0.5s alternate 3;
-      }
-      @keyframes errorFlash {
-        from { background-color: inherit; }
-        to   { background-color: red; }
-      }
+  /* Additional Buttons (Run, Clean, etc.) */
+  .run-button, .clean-button, .upload-button {
+    padding: 12px 18px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: 0.2s;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  .run-button {
+    background-color: #4CAF50;
+    color: white;
+  }
+  .run-button:hover {
+    background-color: #388E3C;
+  }
+  .clean-button {
+    background-color: #FF9800;
+    color: white;
+  }
+  .clean-button:hover {
+    background-color: #E65100;
+  }
+  .upload-button {
+    background-color: #2196F3;
+    color: white;
+  }
+  .upload-button:hover {
+    background-color: #0b7dda;
+  }
   
-      /* =============================
-         4) COSTUME MANAGER MODAL
-         ============================= */
-      .hidden {
-        display: none;
-      }
-      /* Fullscreen overlay */
-      #costume-manager {
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 9999;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.5); /* semi-transparent black */
-      }
-      /* Panel in center */
-      #costume-manager .manager-content {
-        background-color: #fefefe;
-        margin: 5% auto;
-        padding: 20px;
-        border: 2px solid #888;
-        border-radius: 8px;
-        width: 500px;
-        max-width: 90%;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      }
-      #costume-manager h2 {
-        margin-top: 0;
-        text-align: center;
-        border-bottom: 2px solid #ccc;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-      }
-      #costume-list {
-        max-height: 300px; 
-        overflow-y: auto;
-        display: flex;
-        flex-wrap: wrp;
-        gap: 10px;
-        justify-content: center;
-        margin-bottom: 20px;
-      }
-      #costume-list img {
-        width: 100px;
-        height: auto;
-        border: 2px solid #ddd;
-        border-radius: 4px;
-        background: #fff;
-        cursor: pointer;
-      }
-      .close-button {
-        background-color: #777;
-        color: white;
-      }
-      .close-button:hover {
-        background-color: #555;
-      }
+  /* Highlighting for error blocks */
+  .error-highlight {
+    animation: errorFlash 0.5s alternate 3;
+  }
+  @keyframes errorFlash {
+    from { background-color: inherit; }
+    to   { background-color: red; }
+  }
   
-      /* Costume Thumbnail */
+  
+  /* =============================
+     4) COSTUME MANAGER MODAL
+     ============================= */
+  .hidden {
+    display: none;
+  }
+  /* Fullscreen overlay */
+  #costume-manager {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5); /* semi-transparent black */
+  }
+  /* Panel in center */
+  #costume-manager .manager-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 2px solid #888;
+    border-radius: 8px;
+    width: 500px;
+    max-width: 90%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  }
+  #costume-manager h2 {
+    margin-top: 0;
+    text-align: center;
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+  #costume-list {
+    max-height: 300px; 
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrp;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  #costume-list img {
+    width: 100px;
+    height: auto;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+  }
+  .close-button {
+    background-color: #777;
+    color: white;
+    border: none;
+  }
+  .close-button:hover {
+    background-color: #555;
+  }
+  
+  /* Costume Thumbnail */
   .costume-item {
     position: relative;
     display: inline-block;
@@ -346,4 +349,45 @@
   }
   .delete-costume-btn:hover {
     background: darkred;
+  }
+  
+  /* =============================
+     5) PUZZLE-STYLE STACK BLOCKS
+     (Normal & workspace blocks, except c-block)
+     ============================= */
+  .workspace-block:not(.c-block),
+  .block {
+    /* Position & extra spacing so puzzle tabs are visible */
+    margin-top: 15px;
+    margin-bottom: 15px;
+    position: relative; 
+    min-height: 40px; /* ensure enough space for puzzle notch */
+  }
+  
+  /* Create a puzzle "tab" on top */
+  .workspace-block:not(.c-block)::before,
+  .block::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 40px;
+    width: 18px;
+    height: 12px;
+    background: inherit; /* match the parent's background color */
+    border-radius: 10px;
+    box-shadow: 0px 1px 3px rgba(0,0,0,0.2);
+  }
+  
+  /* Create a puzzle "notch" on bottom */
+  .workspace-block:not(.c-block)::after,
+  .block::after {
+    content: "";
+    position: absolute;
+    bottom: -6px;
+    left: 40px;
+    width: 18px;
+    height: 12px;
+    background: inherit;
+    border-radius: 10px;
+    box-shadow: 0px 1px 3px rgba(0,0,0,0.2);
   }
