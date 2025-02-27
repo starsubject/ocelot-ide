@@ -17,7 +17,6 @@
     align-items: stretch;   /* Stretch child (#app-container) to full width */
   }
   /* Ensure #app-container fits within the viewport */
-  /* Let #app-container occupy the entire viewport without breaking on small screens */
   #app-container {
     display: flex;
     flex: 1;
@@ -56,7 +55,6 @@
     flex: 2;
     display: flex;
     flex-direction: column;
-    /* allow children to stretch or grow */
     align-items: flex-start;
     border: 2px solid #000;
     border-radius: 10px;
@@ -145,7 +143,7 @@
     align-items: center;
     user-select: none;
     cursor: grab;
-    position: relative; /* Needed for puzzle pseudo-elements */
+    position: relative; /* so puzzle styling can anchor if needed */
   }
   /* Toolbox blocks (blue-ish) */
   .block {
@@ -355,39 +353,38 @@
      5) PUZZLE-STYLE STACK BLOCKS
      (Normal & workspace blocks, except c-block)
      ============================= */
+  /* We want a minimum height for the puzzle notches to be visible */
   .workspace-block:not(.c-block),
-  .block {
-    /* Position & extra spacing so puzzle tabs are visible */
-    margin-top: 15px;
-    margin-bottom: 15px;
-    position: relative; 
-    min-height: 40px; /* ensure enough space for puzzle notch */
+  .block:not(.c-block) {
+    min-height: 50px; 
+    /* We'll let width auto-adjust to content */
+    display: inline-flex; 
+    align-items: center;
+    position: relative;
+    clip-path: polygon(
+      /* Start top-left corner */
+      0% 0%,
+      /* Move across to the nib */
+      38% 0%,
+      /* nib goes down 12% vertically */
+      38% 12%,
+      46% 12%,
+      46% 0%,
+      /* finish top edge to right corner */
+      100% 0%,
+      100% 100%,
+      /* bottom nib */
+      46% 100%,
+      46% 88%,
+      38% 88%,
+      38% 100%,
+      0% 100%
+    );
+    overflow: hidden; /* so content doesn't spill outside puzzle shape */
   }
-  
-  /* Create a puzzle "tab" on top */
-  .workspace-block:not(.c-block)::before,
-  .block::before {
-    content: "";
-    position: absolute;
-    top: -6px;
-    left: 40px;
-    width: 18px;
-    height: 12px;
-    background: inherit; /* match the parent's background color */
-    border-radius: 10px;
-    box-shadow: 0px 1px 3px rgba(0,0,0,0.2);
-  }
-  
-  /* Create a puzzle "notch" on bottom */
-  .workspace-block:not(.c-block)::after,
-  .block::after {
-    content: "";
-    position: absolute;
-    bottom: -6px;
-    left: 40px;
-    width: 18px;
-    height: 12px;
-    background: inherit;
-    border-radius: 10px;
-    box-shadow: 0px 1px 3px rgba(0,0,0,0.2);
+  /* Slightly enlarge bounding box on hover for a neat effect */
+  .workspace-block:not(.c-block):hover,
+  .block:not(.c-block):hover {
+    transform: scale(1.01);
+    box-shadow: 3px 3px 8px rgba(0,0,0,0.15);
   }
