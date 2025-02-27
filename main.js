@@ -219,14 +219,22 @@ function getInputs(block) {
     const inputName = wrapper.dataset.inputName;
     if (!inputName) return;
 
+    // First, check if there's a non-reporter block dropped here by mistake
+    // (like a normal or c-block). If so, ignore it & just read the text input.
+    const nonReporter = wrapper.querySelector(".workspace-block, .c-block");
+    if (nonReporter && !nonReporter.classList.contains("workspace-reporter")) {
+      const textInput = wrapper.querySelector("input");
+      inputs[inputName] = textInput ? textInput.value : "";
+      return;
+    }
+
     // Check if there's a reporter block in this wrapper
     const reporterBlock = wrapper.querySelector(".workspace-reporter");
     if (reporterBlock) {
       // If the parent is a C-block (like Repeat/Forever), 
-      // we IGNORE the reporter block so it doesn't overwrite our typed value.
+      // we IGNORE the reporter block so it doesn't overwrite our typed value
       const parentDef = blockDefinitions[block.dataset.blockType] || {};
       if (parentDef.block_type === "c-block") {
-        // Use the text input's own value
         const textInput = wrapper.querySelector("input");
         inputs[inputName] = textInput ? textInput.value : "";
       } else {
@@ -237,11 +245,7 @@ function getInputs(block) {
     } else {
       // Otherwise, treat it like a normal text input
       const textInput = wrapper.querySelector("input");
-      if (textInput) {
-        inputs[inputName] = textInput.value;
-      } else {
-        inputs[inputName] = "";
-      }
+      inputs[inputName] = textInput ? textInput.value : "";
     }
   });
 
