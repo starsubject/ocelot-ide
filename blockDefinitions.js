@@ -1,4 +1,3 @@
-// blockDefinitions.js
 window.blockDefinitions = {
   print: {
     block_type: "normal",
@@ -8,7 +7,7 @@ window.blockDefinitions = {
       const code = `console.log(${JSON.stringify(inputs.input1)});`;
       return {
         realCode: code,
-        displayCode: `Print: ${inputs.input1}`
+        displayCode: code
       };
     },
   },
@@ -17,10 +16,9 @@ window.blockDefinitions = {
     format: ["Alert", "input1"],
     input1_default: "Hi!",
     execute: (inputs, childData, depth) => {
-      const code = `alert(${JSON.stringify(inputs.input1)});`;
       return {
-        realCode: code,
-        displayCode: `Alert: ${inputs.input1}`
+        realCode: `(() => alert(${JSON.stringify(inputs.input1)}))();`, 
+        displayCode: `alert(${JSON.stringify(inputs.input1)});`
       };
     },
   },
@@ -32,7 +30,7 @@ window.blockDefinitions = {
     execute: (inputs, childData, depth) => {
       return {
         realCode: String(inputs.input1),
-        displayCode: `Value: ${inputs.input1}`
+        displayCode: String(inputs.input1),
       };
     },
   },
@@ -45,7 +43,7 @@ window.blockDefinitions = {
       const code = `window.confirm(${JSON.stringify(inputs.input1)});`;
       return {
         realCode: code,
-        displayCode: `Confirm: ${inputs.input1}`
+        displayCode: code
       };
     },
   },
@@ -55,51 +53,51 @@ window.blockDefinitions = {
       format: ["Prompt", "input1"],
       input1_default: "Hello world!",
       execute: (inputs, childData, depth) => {
-        const code = `window.prompt(${JSON.stringify(inputs.input1)});`; // Fixed typo
+        const code = `window.prompt(${JSON.stringify(inputs.input1)});`;
         return {
           realCode: code,
-          displayCode: `Prompt: ${inputs.input1}`
+          displayCode: code
         };
       },
-  },
+    },
 
   repeat: {
     block_type: "c-block",
-    format: ["Repeat", "input1"],
+    format: ["Repeat"],
     input1_default: "3",
     execute: (inputs, childData, depth) => {
       let count = parseInt(inputs.input1, 10);
       if (isNaN(count)) count = 0; 
       const iVar = "i" + depth;
-      const childReal = childData.length > 0 ? childData.map(cd => cd.realCode).join("\n") : "";
+      const childReal = childData.map(cd => cd.realCode).join("\n");
 
       const realCode = `
-let __globalSafetyCount = 0;
-for (let ${iVar} = 0; ${iVar} < ${count}; ${iVar}++) {
-  __globalSafetyCount++;
-  if (__globalSafetyCount > 5000) {
-    console.warn("Global safety break triggered in repeat");
-    break;
+{
+  let __globalSafetyCount = 0; 
+  for (let ${iVar} = 0; ${iVar} < ${count}; ${iVar}++) {
+    __globalSafetyCount++;
+    if (__globalSafetyCount > 5000) {
+      console.warn("Global safety break triggered in repeat");
+      break;
+    }
+    ${childReal}
   }
-  ${childReal}
 }
       `.trim();
 
       return {
         realCode,
-        displayCode: `Repeat ${count} times:\n${childReal}`
+        displayCode: realCode
       };
     },
   },
-
   forever: {
     block_type: "c-block",
     format: ["Forever do"],
     execute: (inputs, childData, depth) => {
-      const childReal = childData.length > 0 ? childData.map(cd => cd.realCode).join("\n") : "";
+      const childReal = childData.map(cd => cd.realCode).join("\n");
 
       const realCode = `
-let __globalSafetyCount = 0;
 while (true) {
   __globalSafetyCount++;
   if (__globalSafetyCount > 5000) {
@@ -112,7 +110,7 @@ while (true) {
 
       return {
         realCode,
-        displayCode: `Forever:\n${childReal}`
+        displayCode: realCode
       };
     },
   },
@@ -150,7 +148,31 @@ while (true) {
   }
 }
         `.trim(),
-        displayCode: `Draw sprite "${inputs.imageinput1}" on canvas`
+        displayCode: `(() => {
+let found = costumes.find(ct => ct.name === ${JSON.stringify(inputs.imageinput1)});
+if (!found) {
+  console.warn("Costume not found:", ${JSON.stringify(inputs.imageinput1)});
+} else {
+  let canvas = document.getElementById("graphics-canvas");
+  if (canvas) {
+    let ctx = canvas.getContext("2d");
+    let imageObj = new Image();
+    imageObj.src = found.data;
+
+    imageObj.onload = function() {
+      let x = Math.max(10, Math.random() * (canvas.width - 110));
+      let y = Math.max(10, Math.random() * (canvas.height - 110));
+      ctx.drawImage(imageObj, x, y, 100, 100);
+    };
+
+    imageObj.onerror = function() {
+      console.warn("Failed to load image:", ${JSON.stringify(inputs.imageinput1)});
+    };
+  } else {
+    console.warn("Canvas not found! Cannot draw sprite.");
+  }
+}
+})();`
       };
     }
   },
