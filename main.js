@@ -729,3 +729,4 @@ function makeDraggableAndSnappable(block) {
     }
   });
 }
+//
