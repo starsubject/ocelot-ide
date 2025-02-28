@@ -43,7 +43,7 @@
     min-width: 150px; 
   }
   #block-menu h3 {
-    margin-top: 0;
+    margin-top: 0; 
     text-align: center;
     border-bottom: 2px solid rgba(0,0,0,0.1);
     padding-bottom: 5px;
@@ -62,14 +62,14 @@
     min-width: 300px;
   }
   #workspace-container h3 {
-    margin-top: 0;
+    margin-top: 0; 
     text-align: center;
     border-bottom: 2px solid rgba(0,0,0,0.1);
     padding-bottom: 5px;
     width: 100%;
   }
   #workspace {
-    flex: 1;
+    flex: 1; 
     width: 100%;
     margin-bottom: 10px;
     border: 2px solid #000;
@@ -105,11 +105,11 @@
     background-color: #f4f4f4;
     box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
     padding: 10px;
-    min-width: 400px;
+    min-width: 400px; 
     overflow: hidden;
   }
   #canvas-container h3 {
-    margin-top: 0;
+    margin-top: 0; 
     text-align: center;
     border-bottom: 2px solid rgba(0,0,0,0.1);
     padding-bottom: 5px;
@@ -125,68 +125,74 @@
   }
   
   /* =============================
-     3) BLOCKS & DRAGGABLE ITEMS
+     3) STACK BLOCKS (non-C-block)
+     Using scratchblocks.svg as background
      ============================= */
   
-  /* 
-     For normal/stack blocks (both .block from toolbox and .workspace-block in the workspace): 
-     - We use a background image referencing the puzzle shape from scratchblocks.svg
-     - We'll fix a size to match that shape (e.g., 300×80).
-  */
+  /* Both toolbox .block and workspace .workspace-block 
+     get the same puzzle background. */
   .block,
   .workspace-block {
+    /* Basic display & spacing */
     position: relative;
     margin: 5px;
-    display: inline-block; /* so multiple blocks can line up */
-    user-select: none;
+    /* We'll use flex so we can easily center text. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: grab;
-    /* If you want them tinted differently in the toolbox vs workspace, 
-       you can keep different backgrounds or filter. 
-       For now, let's keep them the same. */
-  
-    /* We'll define the size to match your puzzle’s aspect ratio. 
-       Adjust as needed. */
-    width: 300px;  
-    height: 80px;
-  
-    /* This is the actual puzzle background from your SVG */
-    background: url("scratchblocks.svg") no-repeat center center;
-    /* Make it fill the 300×80 area. 
-       If the SVG is a different ratio, use background-size: contain; or cover. */
-    background-size: 100% 100%;
-  
-    /* Optionally add a small box-shadow for depth. */
+    user-select: none;
     box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+  
+    /* 
+       This is the key:
+       1) aspect-ratio ensures the shape is correct. 
+       2) min-width/min-height so the block won't shrink too tiny.
+       3) background-size: contain so the puzzle shape fits inside the box.
+    */
+    aspect-ratio: 3 / 1;      /* Example ratio. Adjust to match scratchblocks.svg */
+    min-width: 150px;         /* can tweak these to fit your puzzle shape */
+    min-height: 50px;
+    
+    background: url("scratchblocks.svg") no-repeat center center;
+    background-size: contain; /* scale puzzle to fill container */
+  
+    /* 
+      If you prefer a fixed size, comment out aspect-ratio 
+      and min-width, then define width & height explicitly:
+      width: 300px;
+      height: 100px;
+    */
   }
   
-  /* If you want a different color for blocks in the workspace vs toolbox: */
-  .block {
-    /* e.g. a hue-rotate filter or different .svg? 
-       We'll skip for now. */
-  }
-  .workspace-block {
-    /* Same puzzle shape, could be a different background if you prefer. */
-  }
-  
-  /* 
-     Overlaid label text for a block: 
-     We'll assume you place a <span> inside .block or .workspace-block 
-     for the block's text. Make it absolutely positioned inside the container.
+  /* The text inside the puzzle block: 
+     Usually you'd do:
+       <div class="workspace-block">
+         <span>Move 10 Steps</span>
+       </div>
+     We'll center it with flex's justify-content / align-items. 
+     So no extra absolute positioning needed.
   */
   .block > span,
   .workspace-block > span {
-    position: absolute;
-    top: 50%; 
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: #fff;  /* or black if your SVG is light */
+    color: #fff;
     font-weight: bold;
     font-size: 14px;
+    pointer-events: none;
     white-space: nowrap;
-    pointer-events: none; /* Let user drag the block, not select text */
   }
   
-  /* C-Blocks (like repeat, forever) remain standard rectangles */
+  /* 
+     If you want a slight color filter difference for .block 
+     vs .workspace-block, you could do:
+     .block {
+       filter: hue-rotate(20deg);
+     }
+  */
+  
+  /* =============================
+     4) C-BLOCKS (repeat, forever)
+     ============================= */
   .c-block {
     background-color: #ffcc00;
     padding: 12px;
@@ -199,7 +205,9 @@
     font-size: 16px;
     font-weight: bold;
     box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-    min-width: 200px; /* Just to keep them wide enough to see the content */
+  
+    /* If you want a min-width so it won't collapse */
+    min-width: 200px;
   }
   .c-block .inner {
     min-height: 50px;
@@ -211,7 +219,9 @@
     border-radius: 5px;
   }
   
-  /* Input Fields */
+  /* =============================
+     5) OTHER INPUTS AND BUTTONS
+     ============================= */
   .input-field {
     background: #ffffff;
     border: 2px solid #ccc;
