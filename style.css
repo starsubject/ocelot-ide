@@ -298,3 +298,138 @@
     from { background-color: inherit; }
     to   { background-color: red; }
   }
+
+  /* =============================
+   COSTUME MANAGER MODAL STYLES
+   ============================= */
+
+/* This overlay covers the entire screen. */
+#costume-manager {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999; /* appear above everything else */
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* semi-transparent black */
+    
+    /* If you want it hidden by default, you can add the .hidden class in your HTML. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* The .hidden class can be toggled on/off via JS. */
+  #costume-manager.hidden {
+    display: none;
+  }
+  
+  /* The main white panel in the center */
+  #costume-manager .manager-content {
+    background-color: #fefefe;
+    width: 500px;
+    max-width: 90%;
+    max-height: 80%;
+    padding: 20px;
+    border: 2px solid #888;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    position: relative; /* For the close button if you want to position it absolutely */
+    overflow: hidden;   /* Just in case, so large content can scroll inside */
+    display: flex;
+    flex-direction: column; /* Let children stack vertically */
+  }
+  
+  /* Title or header inside the manager (if any) */
+  #costume-manager h2 {
+    margin-top: 0;
+    text-align: center;
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+  
+  /* The list of costumes (thumbnails) goes here */
+  #costume-list {
+    flex: 1; /* fill available space in manager-content */
+    display: flex;
+    flex-wrap: wrap; /* allow multiple images per row */
+    gap: 10px;       /* spacing between items */
+    overflow-y: auto; /* scroll if too many costumes */
+    justify-content: center; 
+    margin-bottom: 20px;
+    /* You can also add a background or border if you like */
+  }
+  
+  /* Each costume thumbnail wrapper */
+  .costume-item {
+    position: relative;
+    display: inline-block;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    overflow: hidden; /* so if the image is big, it’s clipped */
+    background: #fff;
+    cursor: default; /* by default not clickable, unless in picking mode */
+  }
+  
+  /* The image itself */
+  .costume-item img {
+    display: block;
+    width: 100px;  /* or whatever size you like */
+    height: auto;
+  }
+  
+  /* If in picking mode, we change the cursor to pointer in JS,
+     but you can also do it here if isPickerMode sets some class, e.g. .picking-mode .costume-item { cursor: pointer; } */
+  
+  /* The "Delete (X)" button in the top-right corner of each thumbnail */
+  .delete-costume-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: red;
+    color: white;
+    border: none;
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 0 0 0 5px; /* slight rounding to match the corner */
+    opacity: 0.8;
+    transition: 0.2s;
+  }
+  .delete-costume-btn:hover {
+    opacity: 1;
+    background: darkred;
+  }
+  
+  /* The “Close” button at the bottom or top inside manager-content (if present) */
+  #close-costume-btn {
+    align-self: flex-end; /* push it to the right in the manager-content */
+    padding: 8px 16px;
+    margin-top: 10px;
+    background: #555;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  #close-costume-btn:hover {
+    background-color: #333;
+  }
+  
+  /* The “Add Costume” button in manager (If you want to style it similarly) */
+  #add-costume-btn {
+    padding: 8px 16px;
+    margin-right: auto; /* push it to the left if on same row as close-costume-btn */
+    background: #2196F3;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 10px;
+  }
+  #add-costume-btn:hover {
+    background-color: #0b7dda;
+  }
