@@ -8,60 +8,54 @@
   <script src="https://cdn.jsdelivr.net/gh/Bernardo-Castilho/dragdroptouch@1.27/DragDropTouch.js"></script>
 </head>
 <body>
-<button class="upload-button">
-  <a href="https://script.google.com/macros/s/AKfycbyMFpA-Eusg-DzksvbHQrjK6uSvm3zQ6j0W2HdREgfvq5ORJY6ciW5sr3emwKRtUQuT/exec">
-    Upload project
-  </a>
-</button>
+  <button class="upload-button">
+    <a href="https://script.google.com/macros/s/AKfycbyMFpA-Eusg-DzksvbHQrjK6uSvm3zQ6j0W2HdREgfvq5ORJY6ciW5sr3emwKRtUQuT/exec">
+      Upload project
+    </a>
+  </button>
 
-
-<div id="app-container">
-  
-  <div id="block-menu">
-    <h3>Blocks</h3>
-    
-  </div>
- 
-  <div id="workspace-container">
-    <h3>Workspace</h3>
-    <div id="workspace"
-         ondragover="event.preventDefault();"
-         ondrop="dropBlock(event, document.getElementById('workspace'))">
+  <div id="app-container">
+    <div id="block-menu">
+      <h3>Blocks</h3>
+      <!-- Toolbox blocks appended by main.js -->
     </div>
-    <button class="run-button" onclick="executeBlocks()">Run</button>
-    <h3>Generated Code</h3>
-    <pre id="generated-code"></pre>
+
+    <div id="workspace-container">
+      <h3>Workspace</h3>
+      <div id="workspace"
+           ondragover="event.preventDefault();"
+           ondrop="dropBlock(event, document.getElementById('workspace'))"
+           style="position: relative; width: 600px; height: 400px; border: 1px solid #888;">
+           <!-- Blocks get placed absolutely inside here -->
+      </div>
+      <button class="run-button" onclick="executeBlocks()">Run</button>
+      <h3>Generated Code</h3>
+      <pre id="generated-code"></pre>
+    </div>
+
+    <div id="canvas-container">
+      <h3>Graphical Output</h3>
+      <canvas id="graphics-canvas" width="640" height="360"></canvas>
+    </div>
   </div>
 
-  
-  <div id="canvas-container">
-    <h3>Graphical Output</h3>
-    <canvas id="graphics-canvas" width="640" height="360"></canvas>
+  <button id="open-costume-manager" class="upload-button">
+    Manage Costumes
+  </button>
+
+  <div id="costume-manager" class="hidden">
+    <div class="manager-content">
+      <h2>Costume Manager</h2>
+      <div id="costume-list"></div>
+      <button id="add-costume-btn" class="upload-button">Add Costume</button>
+      <button id="close-costume-btn" class="close-button">Close</button>
+    </div>
   </div>
-</div>
 
-<button id="open-costume-manager" class="upload-button">
-  Manage Costumes
-</button>
+  <button class="upload-button" onclick="saveProject()">Save Project (Copy URL)</button>
 
-
-<div id="costume-manager" class="hidden">
-  <div class="manager-content">
-    <h2>Costume Manager</h2>
-
-    
-    <div id="costume-list"></div>
- 
-    <button id="add-costume-btn" class="upload-button">Add Costume</button>
-    
-    <button id="close-costume-btn" class="close-button">Close</button>
-  </div>
-</div>
-  
-<button class="upload-button" onclick="saveProject()">Save Project (Copy URL)</button>
-
-
-<script src="blockDefinitions.js"></script> <!-- Dictionary for all blocks and their actions -->
-<script src="main.js"></script> <!-- Initiate main block coding engine -->
+  <script src="blockDefinitions.js"></script> 
+  <script src="main.js"></script>
+  <script src="blackbelt.js"></script> <!-- Our new 2D snap logic -->
 </body>
 </html>

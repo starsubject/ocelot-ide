@@ -2,7 +2,6 @@
 
 // We assume "window.blockDefinitions" is already set 
 // by blockDefinitions.js (which is loaded first in index.html).
-// Let's alias it for convenience:
 const blockDefinitions = window.blockDefinitions;
 
 /* ============================
@@ -10,7 +9,7 @@ const blockDefinitions = window.blockDefinitions;
    ============================ */
 function saveProject() {
   const workspace = document.querySelector("#workspace");
-
+  
   // Clone workspace to avoid modifying the original
   const clonedWorkspace = workspace.cloneNode(true);
 
@@ -82,8 +81,7 @@ function loadProjectFromURL() {
         }
       });
 
-      // AFTER LOADING: RE-INIT BLOCKS
-      // Re-enable drag, drop, delete button, etc.
+      // AFTER LOADING: RE-INIT BLOCKS (2D drag logic in blackbelt.js)
       reinitLoadedBlocks(workspace);
 
     } catch (e) {
@@ -208,17 +206,81 @@ function pickCostume(c) {
 }
 
 /* =============================
-   Extract input fields
-   (Supports reporter blocks as well)
+   Recursively Build realCode & displayCode
+   ============================= */
+function executeBlock(block, depth = 0) {
+  const type = block.dataset.blockType;
+  const def = blockDefinitions[type];
+  if (!def) return { realCode: "", displayCode: "" };
+
+  // Gather "this block's" inputs
+  const inputs = getInputs(block);
+
+  // Then gather "child blocks" from the .inner container 
+  const childBlocks = block.querySelector(".inner")
+    ? [...block.querySelector(".inner").children]
+    : [];
+  const childData = childBlocks.map(cb => executeBlock(cb, depth + 1));
+
+  return def.execute(inputs, childData, depth);
+}
+
+/* =============================
+   "Run" the blocks
+   ============================= */
+function executeBlocks() {
+  const workspaceBlocks = document.querySelectorAll(
+    "#workspace > .workspace-block, #workspace > .c-block"
+  );
+
+  // Clear previous execution state
+  let realCodeAll = "let __globalSafetyCount = 0;\n";
+  let displayCodeAll = "";
+  
+  // Clear the canvas if any
+  const canvas = document.getElementById("graphics-canvas");
+  if (canvas) {
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  // Build up the code from each top-level block
+  workspaceBlocks.forEach(block => {
+    const { realCode, displayCode } = executeBlock(block, 0);
+    realCodeAll += realCode + "\n";
+    displayCodeAll += displayCode + "\n";
+  });
+
+  // Show final JS code for debugging
+  document.getElementById("generated-code").textContent = displayCodeAll.trim();
+
+  try {
+    eval(realCodeAll);
+  } catch (e) {
+    console.error("Error executing generated code:", e);
+  }
+
+  // A quick check if #workspace vanished
+  setTimeout(() => {
+    if (!document.getElementById("workspace")) {
+      console.warn("Workspace disappeared! Restoring UI...");
+      location.reload();
+    }
+  }, 500);
+}
+
+/* =============================
+   Input extraction
+   (Supports reporter blocks, etc.)
    ============================= */
 function getInputs(block) {
   const inputs = {};
 
-  // 1) Only get the direct .block-inputs container for this block
+  // Only get the direct .block-inputs container for this block
   const parentBlockInputs = block.querySelector(":scope > .block-inputs");
   if (!parentBlockInputs) return inputs;
 
-  // 2) Within that container, find all .input-wrapper
+  // Within that container, find all .input-wrapper
   const inputWrappers = parentBlockInputs.querySelectorAll(".input-wrapper");
 
   inputWrappers.forEach(wrapper => {
@@ -250,7 +312,7 @@ function getInputs(block) {
         inputs[inputName] = realCode;
       }
     } else {
-      // Just a normal input
+      // Just a normal text input
       const textInput = wrapper.querySelector("input");
       inputs[inputName] = textInput ? textInput.value : "";
     }
@@ -260,234 +322,7 @@ function getInputs(block) {
 }
 
 /* =============================
-   Recursively Build realCode & displayCode
-   ============================= */
-function executeBlock(block, depth = 0) {
-  const type = block.dataset.blockType;
-  const def = blockDefinitions[type];
-  if (!def) return { realCode: "", displayCode: "" };
-
-  // Gather "this block's" inputs
-  const inputs = getInputs(block);
-
-  // Then gather "child blocks" from the .inner container 
-  const childBlocks = block.querySelector(".inner")
-    ? [...block.querySelector(".inner").children]
-    : [];
-  const childData = childBlocks.map(cb => executeBlock(cb, depth + 1));
-
-  return def.execute(inputs, childData, depth);
-}
-
-/* =============================
-   "Run" the blocks
-   ============================= */
-function executeBlocks() {
-  // Instead of "list" top-level blocks, we’ll find any block with no parent stack
-  // i.e., not nested inside another block
-  const workspace = document.getElementById("workspace");
-  const allBlocks = workspace.querySelectorAll(".workspace-block, .c-block");
-
-  // We'll gather "root blocks" that are at top-level
-  const rootBlocks = [];
-  allBlocks.forEach(block => {
-    // If it doesn't have a parent .workspace-block or .c-block, it's a root
-    const parentStack = block.closest(".workspace-block, .c-block");
-    if (!parentStack || parentStack === block) {
-      rootBlocks.push(block);
-    }
-  });
-
-  // Now each rootBlock is effectively a "thread"
-  let realCodeAll = "let __globalSafetyCount = 0;\n";
-  let displayCodeAll = "";
-
-  // Clear the canvas if any
-  const canvas = document.getElementById("graphics-canvas");
-  if (canvas) {
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }
-
-  // Build up the code from each root block
-  rootBlocks.forEach(block => {
-    const { realCode, displayCode } = executeBlock(block, 0);
-    // We'll do them "in parallel" by simply concatenating code. 
-    // Another approach is to wrap each in a function and call them asynchronously.
-    realCodeAll += realCode + "\n";
-    displayCodeAll += displayCode + "\n";
-  });
-
-  // Show final JS code for debugging
-  document.getElementById("generated-code").textContent = displayCodeAll.trim();
-
-  try {
-    eval(realCodeAll);
-  } catch (e) {
-    console.error("Error executing generated code:", e);
-  }
-}
-
-/* =============================
-   2D DRAG & SNAP LOGIC
-   ============================= */
-
-/*
-   We'll track current drag state. 
-   - dragBlock: the element being dragged
-   - offsetX/offsetY: the pointer offset inside block
-*/
-let dragBlock = null;
-let offsetX = 0;
-let offsetY = 0;
-
-function onMouseMove(e) {
-  if (!dragBlock) return;
-
-  // Move the block with the mouse
-  const workspaceRect = document.getElementById("workspace").getBoundingClientRect();
-  const x = e.clientX - workspaceRect.left - offsetX;
-  const y = e.clientY - workspaceRect.top - offsetY;
-
-  // Set block's position
-  dragBlock.style.left = x + "px";
-  dragBlock.style.top = y + "px";
-
-  // Possibly highlight potential snap targets
-  highlightSnapTarget(dragBlock);
-}
-
-function onMouseUp() {
-  if (dragBlock) {
-    // Attempt to snap
-    snapToClosest(dragBlock);
-    dragBlock = null;
-  }
-}
-
-document.addEventListener("mousemove", onMouseMove);
-document.addEventListener("mouseup", onMouseUp);
-
-function makeBlockDraggable(block) {
-  // Because we use absolute positioning in #workspace
-  // we ensure the block is position:absolute
-  block.style.position = "absolute";
-
-  // If block doesn't have a stored position yet, place it randomly
-  if (!block.style.left) {
-    block.style.left = "50px";
-    block.style.top = "50px";
-  }
-
-  block.addEventListener("mousedown", (e) => {
-    // Only start drag if user isn't clicking an input, button, etc.
-    // We'll skip drag if e.target is a form element or the delete button
-    if (e.target.tagName === "INPUT" || e.target.classList.contains("delete-button")) {
-      return;
-    }
-    // Start dragging
-    dragBlock = block;
-    const blockRect = block.getBoundingClientRect();
-    offsetX = e.clientX - blockRect.left;
-    offsetY = e.clientY - blockRect.top;
-  });
-}
-
-/* 
-   highlightSnapTarget: show a slight highlight on the block
-   that this block is near enough to snap onto 
-   (In real Scratch, you'd handle multiple potential connection points.)
-*/
-function highlightSnapTarget(movingBlock) {
-  // We do a simple approach: 
-  // look for the closest block below the moving block
-  const workspace = document.getElementById("workspace");
-  const blocks = workspace.querySelectorAll(".workspace-block, .c-block");
-  
-  let bestTarget = null;
-  let bestDist = 99999;
-
-  const mbRect = movingBlock.getBoundingClientRect();
-
-  blocks.forEach(b => {
-    if (b === movingBlock) return; // skip self
-    const rect = b.getBoundingClientRect();
-    // We'll consider "snap" if the bottom of b is near the top of movingBlock
-    // or vice versa. This is naive but demonstrates the idea.
-
-    const dy = (rect.bottom) - mbRect.top; 
-    // if the block's bottom is near the top of the moving block
-    const dx = Math.abs((rect.left + rect.width/2) - (mbRect.left + mbRect.width/2));
-
-    // If they're roughly aligned horizontally and close vertically
-    if (dy > -20 && dy < 20 && dx < 50) {
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist < bestDist) {
-        bestDist = dist;
-        bestTarget = b;
-      }
-    }
-  });
-
-  // remove old highlight
-  blocks.forEach(b => b.classList.remove("snap-highlight"));
-
-  if (bestTarget) {
-    bestTarget.classList.add("snap-highlight");
-  }
-}
-
-/* 
-   snapToClosest: finalize the snap once user mouseups
-*/
-function snapToClosest(movingBlock) {
-  const workspace = document.getElementById("workspace");
-  const blocks = workspace.querySelectorAll(".workspace-block, .c-block");
-  
-  let bestTarget = null;
-  let bestDist = 99999;
-  const mbRect = movingBlock.getBoundingClientRect();
-  const wsRect = workspace.getBoundingClientRect();
-
-  blocks.forEach(b => {
-    if (b === movingBlock) return;
-    const rect = b.getBoundingClientRect();
-    const dy = (rect.bottom) - mbRect.top;
-    const dx = Math.abs((rect.left + rect.width/2) - (mbRect.left + mbRect.width/2));
-
-    if (dy > -20 && dy < 20 && dx < 50) {
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist < bestDist) {
-        bestDist = dist;
-        bestTarget = b;
-      }
-    }
-  });
-
-  // remove highlight
-  blocks.forEach(b => b.classList.remove("snap-highlight"));
-
-  if (bestTarget) {
-    // Snap the top of movingBlock to the bottom of bestTarget
-    const tRect = bestTarget.getBoundingClientRect();
-    const newLeft = (tRect.left + tRect.width/2) - (mbRect.width/2);
-    const newTop  = tRect.bottom; 
-    // convert from screen coords to workspace coords
-    const finalLeft = newLeft - wsRect.left;
-    const finalTop = newTop - wsRect.top;
-
-    movingBlock.style.left = finalLeft + "px";
-    movingBlock.style.top  = finalTop + "px";
-
-    // Optionally you could re-parent the block in DOM under the target 
-    // if you want to show them connected, etc.
-    // But for a "scratch-like" approach, 
-    // you'd do a more advanced approach with child-lists, etc.
-  }
-}
-
-/* =============================
-   Create DOM element for a block
+   Create DOM element for a block (no 2D drag logic here)
    ============================= */
 function createBlockElement(blockType, isWorkspaceBlock = false) {
   const blockData = blockDefinitions[blockType];
@@ -503,34 +338,35 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
 
   // If it's a reporter block
   if (blockData.block_type === "reporter") {
-    // ... (unchanged from your original logic) ...
-    // For brevity, we skip the reporter code listing
-    // (the old code remains the same)
-    // We'll just keep the relevant part about returning the block
     block.className = isWorkspaceBlock ? "workspace-reporter" : "reporter-block";
-    // (rest of your existing reporter logic)
+    block.style.borderRadius = "10px";
+    block.style.padding = "5px 10px";
+    block.style.backgroundColor = "#3498db";
+    block.style.color = "white";
+    block.style.cursor = "pointer";
+    block.style.display = "inline-block";
+    block.style.position = "relative";
+    // Build the input placeholders, etc. (unchanged)
     // ...
-    return block; // after building inputs, etc.
+    // (omitted for brevity – same as your code)
+    return block;
   }
 
   // If it's a C-block (like "repeat" or "forever")
   if (blockData.block_type === "c-block") {
-    // ... (unchanged from your original logic) ...
-    // We still set block.className = "c-block"
-    // build input area, .inner container, etc.
     block.className = "c-block";
+    // Build c-block inputs, .inner container, etc. (same as your code)
     // ...
     return block;
   }
 
-  // Otherwise, it's a normal (stack) block
+  // Otherwise, a normal (stack) block
   block.className = isWorkspaceBlock ? "workspace-block" : "block";
 
-  // Build the inputs (same as original)
+  // Build the input area (same as your code)
   const inputArea = document.createElement("div");
   inputArea.classList.add("block-inputs");
-  // ... build each input according to blockData.format ...
-  // ... identical to your original approach ...
+  // ...
   block.appendChild(inputArea);
 
   // If it's in the workspace, add a delete button if not reporter
@@ -540,12 +376,9 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
     deleteButton.innerText = "X";
     deleteButton.onclick = () => block.remove();
     block.appendChild(deleteButton);
-
-    // The new part: make it draggable in 2D
-    makeBlockDraggable(block);
   } else if (!isWorkspaceBlock) {
-    // Toolbox version: draggable only, but we have a special approach:
-    // We'll let the user drag from the toolbox to the workspace
+    // Toolbox version: just draggable
+    // We'll still let blackbelt.js do the real 2D dragging in the workspace
     block.draggable = true;
     block.ondragstart = (ev) => {
       ev.dataTransfer.setData("blockType", blockType);
@@ -556,86 +389,5 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
 }
 
 /* =============================
-   Drop handler for workspace
-   Now we place the block at the mouse position in #workspace
+   We'll let blackbelt.js handle dropping and 2D re-init
    ============================= */
-function dropBlock(event, dropTarget) {
-  event.preventDefault();
-  const blockType = event.dataTransfer.getData("blockType");
-  if (blockType) {
-    const newBlock = createBlockElement(blockType, true);
-    dropTarget.appendChild(newBlock);
-
-    // Position it at drop location
-    // We must convert pageX/Y to #workspace coordinates
-    const wsRect = dropTarget.getBoundingClientRect();
-    const x = event.clientX - wsRect.left;
-    const y = event.clientY - wsRect.top;
-
-    newBlock.style.position = "absolute";
-    newBlock.style.left = x + "px";
-    newBlock.style.top = y + "px";
-  }
-}
-
-/* =============================
-   Populate toolbox on load
-   ============================= */
-window.addEventListener("DOMContentLoaded", () => {
-  const blockMenu = document.getElementById("block-menu");
-  Object.keys(blockDefinitions).forEach(blockType => {
-    const toolboxBlock = createBlockElement(blockType, false /* isWorkspaceBlock */);
-    blockMenu.appendChild(toolboxBlock);
-  });
-});
-
-/* =============================
-   RE-INITIALIZE LOADED BLOCKS
-   (makes sure all blocks have correct classes, 
-    absolute positioning, drag+drop, etc.)
-   ============================= */
-function reinitLoadedBlocks(container) {
-  container.querySelectorAll(".workspace-block, .c-block, .workspace-reporter").forEach(block => {
-    const blockType = block.dataset.blockType;
-    if (!blockType || !blockDefinitions[blockType]) return;
-
-    const def = blockDefinitions[blockType];
-
-    if (def.block_type === "c-block") {
-      block.classList.add("c-block");
-      // Re-enable drag-drop on the .inner container
-      const inner = block.querySelector(".inner");
-      if (inner) {
-        inner.ondragover = e => e.preventDefault();
-        inner.ondrop = e => {
-          e.preventDefault();
-          e.stopPropagation();
-          const nestedType = e.dataTransfer.getData("blockType");
-          if (nestedType) {
-            const newChildBlock = createBlockElement(nestedType, true);
-            inner.appendChild(newChildBlock);
-            // Place at 0,0 or so
-            newChildBlock.style.position = "relative";
-            newChildBlock.style.left = "0px";
-            newChildBlock.style.top = "0px";
-          }
-        };
-        reinitLoadedBlocks(inner);
-      }
-    } else if (def.block_type === "reporter") {
-      block.classList.add("workspace-reporter");
-    } else {
-      block.classList.add("workspace-block");
-      makeBlockDraggable(block);
-    }
-
-    // If it's in the workspace, add a delete button if missing (but not for reporters)
-    if (!block.querySelector(".delete-button") && def.block_type !== "reporter") {
-      const deleteButton = document.createElement("button");
-      deleteButton.className = "delete-button";
-      deleteButton.innerText = "X";
-      deleteButton.onclick = () => block.remove();
-      block.appendChild(deleteButton);
-    }
-  });
-}
