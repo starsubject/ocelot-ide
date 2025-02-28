@@ -406,7 +406,7 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
       deleteButton.onclick = () => block.remove();
       block.appendChild(deleteButton);
 
-      // Basic drag
+      // Draggable
       block.draggable = true;
       block.ondragstart = (ev) => {
         ev.dataTransfer.setData("blockType", blockType);
@@ -610,10 +610,9 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
 }
 
 /* =============================
-   LEGACY Drop handler for workspace
-   (Will be overridden in blackbelt.js)
+   Drop handler for workspace
    ============================= */
-function legacyDropBlock(event, dropTarget) {
+function dropBlock(event, dropTarget) {
   event.preventDefault();
   const blockType = event.dataTransfer.getData("blockType");
   if (blockType) {
@@ -637,7 +636,6 @@ window.addEventListener("DOMContentLoaded", () => {
    RE-INITIALIZE LOADED BLOCKS
    (makes sure all blocks have correct classes, 
     delete buttons if needed, drag+drop, etc.)
-   We'll also call a blackbeltReinit2D() if it exists.
    ============================= */
 function reinitLoadedBlocks(container) {
   container.querySelectorAll(".workspace-block, .c-block, .workspace-reporter").forEach(block => {
@@ -660,10 +658,9 @@ function reinitLoadedBlocks(container) {
           if (nestedType) {
             const newChildBlock = createBlockElement(nestedType, true);
             inner.appendChild(newChildBlock);
-            // Reinit recursively
-            reinitLoadedBlocks(inner);
           }
         };
+        reinitLoadedBlocks(inner);
       }
     }
     else if (def.block_type === "reporter") {
@@ -688,9 +685,4 @@ function reinitLoadedBlocks(container) {
       ev.dataTransfer.setData("blockType", blockType);
     };
   });
-
-  // If blackbeltReinit2D is defined, call it
-  if (typeof blackbeltReinit2D === "function") {
-    blackbeltReinit2D(container);
-  }
 }
