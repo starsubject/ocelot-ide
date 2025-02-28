@@ -2,6 +2,7 @@
 
 // We assume "window.blockDefinitions" is already set 
 // by blockDefinitions.js (which is loaded first in index.html).
+// Let's alias it for convenience:
 const blockDefinitions = window.blockDefinitions;
 
 /* ============================
@@ -23,7 +24,7 @@ function saveProject() {
   const imagePromises = [];
 
   // Example: compress each <img> in #workspace to 64x64
-  clonedWorkspace.querySelectorAll("img").forEach(img => {
+  document.querySelectorAll("#workspace img").forEach(img => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     canvas.width = 64;
@@ -81,7 +82,8 @@ function loadProjectFromURL() {
         }
       });
 
-      // AFTER LOADING: RE-INIT BLOCKS (2D drag logic in blackbelt.js)
+      // AFTER LOADING: RE-INIT BLOCKS
+      // Re-enable drag, drop, delete button, etc.
       reinitLoadedBlocks(workspace);
 
     } catch (e) {
@@ -206,6 +208,58 @@ function pickCostume(c) {
 }
 
 /* =============================
+   Extract input fields
+   (Supports reporter blocks as well)
+   ============================= */
+function getInputs(block) {
+  const inputs = {};
+
+  // 1) Only get the direct .block-inputs container for this block
+  const parentBlockInputs = block.querySelector(":scope > .block-inputs");
+  if (!parentBlockInputs) return inputs;
+
+  // 2) Within that container, find all .input-wrapper
+  const inputWrappers = parentBlockInputs.querySelectorAll(".input-wrapper");
+
+  inputWrappers.forEach(wrapper => {
+    const inputName = wrapper.dataset.inputName;
+    if (!inputName) return;
+
+    // If there's a reporter block inside this wrapper
+    const reporterBlock = wrapper.querySelector(".workspace-reporter");
+
+    // If there's a normal/c-block in the input wrapper by mistake:
+    const nonReporter = wrapper.querySelector(".workspace-block, .c-block");
+    const parentDef = blockDefinitions[block.dataset.blockType] || {};
+
+    // If a non-reporter block is in the input wrapper, ignore it & use typed text
+    if (nonReporter && !nonReporter.classList.contains("workspace-reporter")) {
+      const textInput = wrapper.querySelector("input");
+      inputs[inputName] = textInput ? textInput.value : "";
+      return;
+    }
+
+    // If we found a reporter block
+    if (reporterBlock) {
+      // If parent is a c-block, ignore reporter
+      if (parentDef.block_type === "c-block") {
+        const textInput = wrapper.querySelector("input");
+        inputs[inputName] = textInput ? textInput.value : "";
+      } else {
+        const { realCode } = executeBlock(reporterBlock);
+        inputs[inputName] = realCode;
+      }
+    } else {
+      // Just a normal input
+      const textInput = wrapper.querySelector("input");
+      inputs[inputName] = textInput ? textInput.value : "";
+    }
+  });
+
+  return inputs;
+}
+
+/* =============================
    Recursively Build realCode & displayCode
    ============================= */
 function executeBlock(block, depth = 0) {
@@ -260,69 +314,19 @@ function executeBlocks() {
     console.error("Error executing generated code:", e);
   }
 
-  // A quick check if #workspace vanished
-  setTimeout(() => {
+  function checkWorkspace() {
     if (!document.getElementById("workspace")) {
       console.warn("Workspace disappeared! Restoring UI...");
-      location.reload();
+      location.reload(); // Reload the page only if workspace vanishes
     }
-  }, 500);
+  }
+
+  // Delay workspace check slightly
+  setTimeout(checkWorkspace, 500);
 }
 
 /* =============================
-   Input extraction
-   (Supports reporter blocks, etc.)
-   ============================= */
-function getInputs(block) {
-  const inputs = {};
-
-  // Only get the direct .block-inputs container for this block
-  const parentBlockInputs = block.querySelector(":scope > .block-inputs");
-  if (!parentBlockInputs) return inputs;
-
-  // Within that container, find all .input-wrapper
-  const inputWrappers = parentBlockInputs.querySelectorAll(".input-wrapper");
-
-  inputWrappers.forEach(wrapper => {
-    const inputName = wrapper.dataset.inputName;
-    if (!inputName) return;
-
-    // If there's a reporter block inside this wrapper
-    const reporterBlock = wrapper.querySelector(".workspace-reporter");
-
-    // If there's a normal/c-block in the input wrapper by mistake:
-    const nonReporter = wrapper.querySelector(".workspace-block, .c-block");
-    const parentDef = blockDefinitions[block.dataset.blockType] || {};
-
-    // If a non-reporter block is in the input wrapper, ignore it & use typed text
-    if (nonReporter && !nonReporter.classList.contains("workspace-reporter")) {
-      const textInput = wrapper.querySelector("input");
-      inputs[inputName] = textInput ? textInput.value : "";
-      return;
-    }
-
-    // If we found a reporter block
-    if (reporterBlock) {
-      // If parent is a c-block, ignore reporter
-      if (parentDef.block_type === "c-block") {
-        const textInput = wrapper.querySelector("input");
-        inputs[inputName] = textInput ? textInput.value : "";
-      } else {
-        const { realCode } = executeBlock(reporterBlock);
-        inputs[inputName] = realCode;
-      }
-    } else {
-      // Just a normal text input
-      const textInput = wrapper.querySelector("input");
-      inputs[inputName] = textInput ? textInput.value : "";
-    }
-  });
-
-  return inputs;
-}
-
-/* =============================
-   Create DOM element for a block (no 2D drag logic here)
+   Create DOM element for a block
    ============================= */
 function createBlockElement(blockType, isWorkspaceBlock = false) {
   const blockData = blockDefinitions[blockType];
@@ -338,38 +342,256 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
 
   // If it's a reporter block
   if (blockData.block_type === "reporter") {
+    // Use "workspace-reporter" if in workspace, "reporter-block" if in toolbox
     block.className = isWorkspaceBlock ? "workspace-reporter" : "reporter-block";
     block.style.borderRadius = "10px";
     block.style.padding = "5px 10px";
-    block.style.backgroundColor = "#3498db";
+    block.style.backgroundColor = "#3498db"; // Blue
     block.style.color = "white";
     block.style.cursor = "pointer";
     block.style.display = "inline-block";
-    block.style.position = "relative";
-    // Build the input placeholders, etc. (unchanged)
-    // ...
-    // (omitted for brevity – same as your code)
+    block.style.position = "relative"; // for small popups
+
+    // If the format includes input placeholders, build them 
+    // (Example: ["Value", "input1"])
+    const inputArea = document.createElement("div");
+    inputArea.classList.add("block-inputs");
+
+    blockData.format.forEach(part => {
+      if (part.startsWith("input")) {
+        // Create wrapper for the reporter's possible text input
+        const inputWrapper = document.createElement("div");
+        inputWrapper.className = "input-wrapper";
+        inputWrapper.dataset.inputName = part;
+        inputWrapper.style.display = "inline-block";
+        inputWrapper.style.margin = "0 4px";
+
+        inputWrapper.ondragover = (e) => e.preventDefault();
+        inputWrapper.ondrop = (e) => {
+          e.preventDefault();
+          const droppedType = e.dataTransfer.getData("blockType");
+          // if a reporter is dropped here, nest it
+          if (blockDefinitions[droppedType] && blockDefinitions[droppedType].block_type === "reporter") {
+            const newReporter = createBlockElement(droppedType, true);
+            inputWrapper.innerHTML = "";
+            inputWrapper.appendChild(newReporter);
+          }
+        };
+
+        // A small text input for the reporter's value
+        const field = document.createElement("input");
+        field.type = "text";
+        field.className = "input-field";
+        field.dataset.inputName = part;
+        // If the block definition has a default number, show that as string
+        field.value = blockData[part + "_default"] || "";
+        inputWrapper.appendChild(field);
+        inputArea.appendChild(inputWrapper);
+      }
+      else {
+        // e.g. "Value"
+        const labelSpan = document.createElement("span");
+        labelSpan.innerText = part + " ";
+        inputArea.appendChild(labelSpan);
+      }
+    });
+
+    block.appendChild(inputArea);
+
+    // Only add the delete button if in workspace
+    if (isWorkspaceBlock) {
+      const deleteButton = document.createElement("button");
+      deleteButton.className = "delete-button";
+      deleteButton.innerText = "X";
+      deleteButton.onclick = () => block.remove();
+      block.appendChild(deleteButton);
+
+      // Basic drag
+      block.draggable = true;
+      block.ondragstart = (ev) => {
+        ev.dataTransfer.setData("blockType", blockType);
+      };
+
+      // On click, show a tiny "value" popup
+      block.onclick = () => {
+        // remove old popup
+        let existing = block.querySelector(".reporter-message");
+        if (existing) existing.remove();
+
+        const msg = document.createElement("div");
+        msg.className = "reporter-message";
+        msg.style.position = "absolute";
+        msg.style.bottom = "120%";
+        msg.style.left = "50%";
+        msg.style.transform = "translateX(-50%)";
+        msg.style.background = "#222";
+        msg.style.color = "#fff";
+        msg.style.padding = "5px 10px";
+        msg.style.borderRadius = "5px";
+        msg.style.fontSize = "12px";
+        msg.style.whiteSpace = "nowrap";
+        msg.innerText = "Reporter block";
+        block.appendChild(msg);
+
+        setTimeout(() => msg.remove(), 2000);
+      };
+
+    } else {
+      // Toolbox version: just draggable
+      block.draggable = true;
+      block.ondragstart = (ev) => {
+        ev.dataTransfer.setData("blockType", blockType);
+      };
+    }
+
     return block;
   }
 
   // If it's a C-block (like "repeat" or "forever")
   if (blockData.block_type === "c-block") {
     block.className = "c-block";
-    // Build c-block inputs, .inner container, etc. (same as your code)
-    // ...
-    return block;
+    const inputArea = document.createElement("div");
+    inputArea.classList.add("block-inputs");
+
+    if (blockType === "repeat") {
+      inputArea.appendChild(document.createTextNode("Repeat "));
+      // We'll place the text field (or reporter) in a wrapper
+      const inputWrapper = document.createElement("div");
+      inputWrapper.className = "input-wrapper";
+      inputWrapper.dataset.inputName = "input1";
+      inputWrapper.style.display = "inline-block";
+      inputWrapper.style.margin = "0 4px";
+
+      inputWrapper.ondragover = (e) => e.preventDefault();
+      inputWrapper.ondrop = (e) => {
+        e.preventDefault();
+        const droppedType = e.dataTransfer.getData("blockType");
+        if (blockDefinitions[droppedType] && blockDefinitions[droppedType].block_type === "reporter") {
+          const newReporter = createBlockElement(droppedType, true);
+          inputWrapper.innerHTML = "";
+          inputWrapper.appendChild(newReporter);
+        }
+      };
+
+      const inputField = document.createElement("input");
+      inputField.type = "text";
+      inputField.className = "input-field";
+      // Show default, e.g. "3"
+      inputField.value = blockData.input1_default;
+      inputField.dataset.inputName = "input1";
+      inputWrapper.appendChild(inputField);
+      inputArea.appendChild(inputWrapper);
+
+      inputArea.appendChild(document.createTextNode(" times"));
+    }
+    else if (blockType === "forever") {
+      inputArea.appendChild(document.createTextNode("Forever do"));
+    }
+
+    block.appendChild(inputArea);
+
+    // Container for nested (child) blocks
+    const innerContainer = document.createElement("div");
+    innerContainer.className = "inner";
+    innerContainer.ondragover = (e) => e.preventDefault();
+    innerContainer.ondrop = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const nestedType = e.dataTransfer.getData("blockType");
+      if (nestedType) {
+        const newChildBlock = createBlockElement(nestedType, true);
+        innerContainer.appendChild(newChildBlock);
+      }
+    };
+    block.appendChild(innerContainer);
+
+  } else {
+    // Normal (stack) block
+    block.className = isWorkspaceBlock ? "workspace-block" : "block";
+    const inputArea = document.createElement("div");
+    inputArea.classList.add("block-inputs");
+
+    blockData.format.forEach(part => {
+      if (part.startsWith("imageinput")) {
+        // Provide a text box + "Pick Costume" button
+        const inputWrapper = document.createElement("div");
+        inputWrapper.className = "input-wrapper";
+        inputWrapper.dataset.inputName = part;
+        inputWrapper.style.display = "inline-block";
+        inputWrapper.style.margin = "0 4px";
+
+        inputWrapper.ondragover = (e) => e.preventDefault();
+        inputWrapper.ondrop = (e) => {
+          e.preventDefault();
+          const droppedType = e.dataTransfer.getData("blockType");
+          if (blockDefinitions[droppedType] && blockDefinitions[droppedType].block_type === "reporter") {
+            const newReporter = createBlockElement(droppedType, true);
+            inputWrapper.innerHTML = "";
+            inputWrapper.appendChild(newReporter);
+          }
+        };
+
+        const field = document.createElement("input");
+        field.type = "text";
+        field.className = "input-field";
+        field.dataset.inputName = part;
+        field.value = blockData[part + "_default"] || "";
+        inputWrapper.appendChild(field);
+
+        // "Pick Costume" button
+        const pickBtn = document.createElement("button");
+        pickBtn.className = "costume-picker-button";
+        pickBtn.textContent = "Pick Costume";
+        pickBtn.onclick = () => {
+          isPickerMode = true;
+          pickingBlock = block;
+          pickingInputName = part;
+          renderCostumeList();
+          costumeManager.classList.remove("hidden");
+        };
+        inputWrapper.appendChild(pickBtn);
+
+        inputArea.appendChild(inputWrapper);
+      }
+      else if (part.startsWith("input")) {
+        // Regular text input (wrapped so a reporter can be dropped in)
+        const inputWrapper = document.createElement("div");
+        inputWrapper.className = "input-wrapper";
+        inputWrapper.dataset.inputName = part;
+        inputWrapper.style.display = "inline-block";
+        inputWrapper.style.margin = "0 4px";
+
+        inputWrapper.ondragover = (e) => e.preventDefault();
+        inputWrapper.ondrop = (e) => {
+          e.preventDefault();
+          const droppedType = e.dataTransfer.getData("blockType");
+          if (blockDefinitions[droppedType] && blockDefinitions[droppedType].block_type === "reporter") {
+            const newReporter = createBlockElement(droppedType, true);
+            inputWrapper.innerHTML = "";
+            inputWrapper.appendChild(newReporter);
+          }
+        };
+
+        const field = document.createElement("input");
+        field.type = "text";
+        field.className = "input-field";
+        field.dataset.inputName = part;
+        field.value = blockData[part + "_default"] || "";
+        inputWrapper.appendChild(field);
+
+        inputArea.appendChild(inputWrapper);
+      }
+      else {
+        // Just static text
+        const textSpan = document.createElement("span");
+        textSpan.innerText = part + " ";
+        inputArea.appendChild(textSpan);
+      }
+    });
+    block.appendChild(inputArea);
   }
 
-  // Otherwise, a normal (stack) block
-  block.className = isWorkspaceBlock ? "workspace-block" : "block";
-
-  // Build the input area (same as your code)
-  const inputArea = document.createElement("div");
-  inputArea.classList.add("block-inputs");
-  // ...
-  block.appendChild(inputArea);
-
-  // If it's in the workspace, add a delete button if not reporter
+  // If it's in the workspace (but not a reporter), add a delete button
   if (isWorkspaceBlock && blockData.block_type !== "reporter") {
     const deleteButton = document.createElement("button");
     deleteButton.className = "delete-button";
@@ -377,8 +599,7 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
     deleteButton.onclick = () => block.remove();
     block.appendChild(deleteButton);
   } else if (!isWorkspaceBlock) {
-    // Toolbox version: just draggable
-    // We'll still let blackbelt.js do the real 2D dragging in the workspace
+    // Toolbox version: draggable only
     block.draggable = true;
     block.ondragstart = (ev) => {
       ev.dataTransfer.setData("blockType", blockType);
@@ -389,5 +610,87 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
 }
 
 /* =============================
-   We'll let blackbelt.js handle dropping and 2D re-init
+   LEGACY Drop handler for workspace
+   (Will be overridden in blackbelt.js)
    ============================= */
+function legacyDropBlock(event, dropTarget) {
+  event.preventDefault();
+  const blockType = event.dataTransfer.getData("blockType");
+  if (blockType) {
+    const newBlock = createBlockElement(blockType, true);
+    dropTarget.appendChild(newBlock);
+  }
+}
+
+/* =============================
+   Populate toolbox on load
+   ============================= */
+window.addEventListener("DOMContentLoaded", () => {
+  const blockMenu = document.getElementById("block-menu");
+  Object.keys(blockDefinitions).forEach(blockType => {
+    const toolboxBlock = createBlockElement(blockType, false /* isWorkspaceBlock */);
+    blockMenu.appendChild(toolboxBlock);
+  });
+});
+
+/* =============================
+   RE-INITIALIZE LOADED BLOCKS
+   (makes sure all blocks have correct classes, 
+    delete buttons if needed, drag+drop, etc.)
+   We'll also call a blackbeltReinit2D() if it exists.
+   ============================= */
+function reinitLoadedBlocks(container) {
+  container.querySelectorAll(".workspace-block, .c-block, .workspace-reporter").forEach(block => {
+    const blockType = block.dataset.blockType;
+    if (!blockType || !blockDefinitions[blockType]) return;
+
+    const def = blockDefinitions[blockType];
+
+    // c-block or reporter or normal?
+    if (def.block_type === "c-block") {
+      block.classList.add("c-block");
+      // Re-enable drag-drop on the inner container
+      const inner = block.querySelector(".inner");
+      if (inner) {
+        inner.ondragover = e => e.preventDefault();
+        inner.ondrop = e => {
+          e.preventDefault();
+          e.stopPropagation();
+          const nestedType = e.dataTransfer.getData("blockType");
+          if (nestedType) {
+            const newChildBlock = createBlockElement(nestedType, true);
+            inner.appendChild(newChildBlock);
+            // Reinit recursively
+            reinitLoadedBlocks(inner);
+          }
+        };
+      }
+    }
+    else if (def.block_type === "reporter") {
+      block.classList.add("workspace-reporter");
+    } 
+    else {
+      block.classList.add("workspace-block");
+    }
+
+    // If it's in the workspace, add a delete button if missing (but not for reporters)
+    if (!block.querySelector(".delete-button") && def.block_type !== "reporter") {
+      const deleteButton = document.createElement("button");
+      deleteButton.className = "delete-button";
+      deleteButton.innerText = "X";
+      deleteButton.onclick = () => block.remove();
+      block.appendChild(deleteButton);
+    }
+
+    // Make it draggable
+    block.draggable = true;
+    block.ondragstart = (ev) => {
+      ev.dataTransfer.setData("blockType", blockType);
+    };
+  });
+
+  // If blackbeltReinit2D is defined, call it
+  if (typeof blackbeltReinit2D === "function") {
+    blackbeltReinit2D(container);
+  }
+}
