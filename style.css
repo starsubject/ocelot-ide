@@ -13,23 +13,21 @@
     background-color: #f9f9f9;
     color: #333;
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: column; 
+    align-items: stretch; 
   }
+  
   #app-container {
     display: flex;
     flex: 1;
     flex-direction: row;
     gap: 10px;
     padding: 10px;
-    height: 100vh; 
+    height: 100vh;
     overflow: hidden;
     flex-wrap: nowrap;
   }
   
-  /* =============================
-     2) LEFT (Toolbox), MIDDLE (Workspace), RIGHT (Canvas)
-     ============================= */
   #block-menu {
     flex: 1;
     display: flex;
@@ -68,20 +66,29 @@
     padding-bottom: 5px;
     width: 100%;
   }
+  
+  /* #workspace with a light grid background. */
   #workspace {
     flex: 1; 
     width: 100%;
     margin-bottom: 10px;
     border: 2px solid #000;
-    background: #f4f4f4;
     border-radius: 8px;
-    overflow-y: auto;
+    overflow: auto;
+    position: relative; /* so absolutely positioned blocks can move inside */
+  
+    /* Light 20px grid background (purely visual): */
+    background-image:
+      linear-gradient(to right, #ccc 1px, transparent 1px),
+      linear-gradient(to bottom, #ccc 1px, transparent 1px);
+    background-size: 20px 20px; 
+    background-color: #fafafa; 
   }
+  
   .run-button {
     margin-bottom: 10px;
   }
   
-  /* Resizable code area */
   #generated-code {
     width: 100%;
     min-height: 120px;
@@ -125,89 +132,61 @@
   }
   
   /* =============================
-     3) STACK BLOCKS (non-C-block)
-     Using scratchblocks.svg as background
+     3) BLOCK STYLES
      ============================= */
   
-  /* Both toolbox .block and workspace .workspace-block 
-     get the same puzzle background. */
-  .block,
-  .workspace-block {
-    /* Basic display & spacing */
-    position: relative;
+  /* Toolbox blocks (blue-ish) */
+  .block {
+    /* Smaller size */
+    font-size: 12px;
+    display: inline-block;
+    padding: 4px 8px;
     margin: 5px;
-    /* We'll use flex so we can easily center text. */
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    font-weight: bold;
+    border-radius: 8px;
+    background-color: #6ec6ff;
+    border: 2px solid #5aaee7;
     cursor: grab;
     user-select: none;
-    box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
-  
-    /* 
-       This is the key:
-       1) aspect-ratio ensures the shape is correct. 
-       2) min-width/min-height so the block won't shrink too tiny.
-       3) background-size: contain so the puzzle shape fits inside the box.
-    */
-    aspect-ratio: 3 / 1;      /* Example ratio. Adjust to match scratchblocks.svg */
-    min-width: 150px;         /* can tweak these to fit your puzzle shape */
-    min-height: 50px;
-    
-    background: url("scratchblocks.svg") no-repeat center center;
-    background-size: contain; /* scale puzzle to fill container */
-  
-    /* 
-      If you prefer a fixed size, comment out aspect-ratio 
-      and min-width, then define width & height explicitly:
-      width: 300px;
-      height: 100px;
-    */
+    transition: background-color 0.2s;
+  }
+  .block:hover {
+    background-color: #5aaee7;
   }
   
-  /* The text inside the puzzle block: 
-     Usually you'd do:
-       <div class="workspace-block">
-         <span>Move 10 Steps</span>
-       </div>
-     We'll center it with flex's justify-content / align-items. 
-     So no extra absolute positioning needed.
-  */
-  .block > span,
-  .workspace-block > span {
-    color: #fff;
+  /* Workspace blocks (green-ish) */
+  .workspace-block {
+    font-size: 12px;
+    display: inline-block;
+    padding: 4px 8px;
+    margin: 5px;
     font-weight: bold;
-    font-size: 14px;
-    pointer-events: none;
-    white-space: nowrap;
+    border-radius: 8px;
+    background-color: #8fe88f;
+    border: 2px solid #7ed07e;
+    cursor: grab;
+    user-select: none;
+    position: relative; /* for the delete button */
+    transition: background-color 0.2s;
+  }
+  .workspace-block:hover {
+    background-color: #7ed07e;
   }
   
-  /* 
-     If you want a slight color filter difference for .block 
-     vs .workspace-block, you could do:
-     .block {
-       filter: hue-rotate(20deg);
-     }
-  */
-  
-  /* =============================
-     4) C-BLOCKS (repeat, forever)
-     ============================= */
+  /* C-blocks (repeat, forever) */
   .c-block {
+    font-size: 12px;
     background-color: #ffcc00;
-    padding: 12px;
+    border: 2px solid #e6b800;
+    padding: 8px;
     margin: 5px;
     border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    position: relative;
-    font-size: 16px;
+    display: block;
     font-weight: bold;
+    cursor: grab;
+    user-select: none;
+    position: relative;
     box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-  
-    /* If you want a min-width so it won't collapse */
-    min-width: 200px;
   }
   .c-block .inner {
     min-height: 50px;
@@ -219,17 +198,29 @@
     border-radius: 5px;
   }
   
-  /* =============================
-     5) OTHER INPUTS AND BUTTONS
-     ============================= */
+  /* Reporter blocks (small pill shape) */
+  .workspace-reporter,
+  .reporter-block {
+    font-size: 12px;
+    display: inline-block;
+    background-color: #3498db;
+    border: 2px solid #2980b9;
+    border-radius: 9999px; /* pill shape */
+    padding: 4px 12px;
+    margin: 5px;
+    color: #fff;
+    cursor: grab;
+  }
+  
+  /* Input fields inside blocks */
   .input-field {
     background: #ffffff;
     border: 2px solid #ccc;
-    padding: 6px 8px;
-    margin: 0 5px;
-    width: 60px;
+    padding: 3px 4px;
+    margin: 0 3px;
+    width: 50px;
     text-align: center;
-    font-size: 14px;
+    font-size: 11px;
     border-radius: 6px;
     font-weight: bold;
     color: #333;
@@ -241,23 +232,25 @@
     outline: none;
   }
   
-  /* Delete Button inside workspace blocks */
+  /* Delete button inside blocks */
   .delete-button {
-    margin-left: auto;
+    position: absolute;
+    top: 2px;
+    right: 2px;
     background: #ff4d4d;
     color: white;
     border: none;
-    padding: 7px;
+    padding: 4px;
     cursor: pointer;
-    font-size: 12px;
-    border-radius: 5px;
-    transition: 0.2s;
+    font-size: 10px;
+    border-radius: 3px;
+    transition: background-color 0.2s;
   }
   .delete-button:hover {
     background-color: #cc0000;
   }
   
-  /* Additional Buttons (Run, Clean, etc.) */
+  /* Additional Buttons */
   .run-button, .clean-button, .upload-button {
     padding: 12px 18px;
     font-size: 16px;
@@ -290,7 +283,7 @@
     background-color: #0b7dda;
   }
   
-  /* Highlighting for error blocks */
+  /* For error flashing */
   .error-highlight {
     animation: errorFlash 0.5s alternate 3;
   }
@@ -298,5 +291,107 @@
     from { background-color: inherit; }
     to   { background-color: red; }
   }
-
   
+  /* =============================
+     4) COSTUME MANAGER MODAL
+     ============================= */
+  .hidden {
+    display: none;
+  }
+  #costume-manager {
+    position: fixed;
+    top: 0; left: 0;
+    z-index: 9999;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    display: flex; /* center the content */
+    align-items: center;
+    justify-content: center;
+  }
+  #costume-manager .manager-content {
+    background-color: #fefefe;
+    width: 500px;
+    max-width: 90%;
+    max-height: 80%;
+    padding: 20px;
+    border: 2px solid #888;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  #costume-manager h2 {
+    margin-top: 0;
+    text-align: center;
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+  #costume-list {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    overflow-y: auto;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .costume-item {
+    position: relative;
+    display: inline-block;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: #fff;
+  }
+  .costume-item img {
+    display: block;
+    width: 100px;
+    height: auto;
+  }
+  .delete-costume-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: red;
+    color: white;
+    border: none;
+    width: 20px; 
+    height: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 0 0 0 5px;
+    opacity: 0.8;
+    transition: 0.2s;
+  }
+  .delete-costume-btn:hover {
+    opacity: 1;
+    background: darkred;
+  }
+  #close-costume-btn {
+    align-self: flex-end;
+    padding: 8px 16px;
+    margin-top: 10px;
+    background: #555;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  #close-costume-btn:hover {
+    background-color: #333;
+  }
+  #add-costume-btn {
+    padding: 8px 16px;
+    margin-right: auto;
+    background: #2196F3;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 10px;
+  }
+  #add-costume-btn:hover {
+    background-color: #0b7dda;
+  }

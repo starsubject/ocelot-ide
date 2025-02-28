@@ -1,5 +1,3 @@
-// main.js
-
 // We assume "window.blockDefinitions" is already set 
 // by blockDefinitions.js (which is loaded first in index.html).
 // Let's alias it for convenience:
@@ -344,16 +342,8 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
   if (blockData.block_type === "reporter") {
     // Use "workspace-reporter" if in workspace, "reporter-block" if in toolbox
     block.className = isWorkspaceBlock ? "workspace-reporter" : "reporter-block";
-    block.style.borderRadius = "10px";
-    block.style.padding = "5px 10px";
-    block.style.backgroundColor = "#3498db"; // Blue
-    block.style.color = "white";
-    block.style.cursor = "pointer";
-    block.style.display = "inline-block";
-    block.style.position = "relative"; // for small popups
-
-    // If the format includes input placeholders, build them 
-    // (Example: ["Value", "input1"])
+    
+    // Format the reporter pill
     const inputArea = document.createElement("div");
     inputArea.classList.add("block-inputs");
 
@@ -371,19 +361,20 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
           e.preventDefault();
           const droppedType = e.dataTransfer.getData("blockType");
           // if a reporter is dropped here, nest it
-          if (blockDefinitions[droppedType] && blockDefinitions[droppedType].block_type === "reporter") {
+          if (
+            blockDefinitions[droppedType] &&
+            blockDefinitions[droppedType].block_type === "reporter"
+          ) {
             const newReporter = createBlockElement(droppedType, true);
             inputWrapper.innerHTML = "";
             inputWrapper.appendChild(newReporter);
           }
         };
 
-        // A small text input for the reporter's value
         const field = document.createElement("input");
         field.type = "text";
         field.className = "input-field";
         field.dataset.inputName = part;
-        // If the block definition has a default number, show that as string
         field.value = blockData[part + "_default"] || "";
         inputWrapper.appendChild(field);
         inputArea.appendChild(inputWrapper);
@@ -395,26 +386,26 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
         inputArea.appendChild(labelSpan);
       }
     });
-
     block.appendChild(inputArea);
 
-    // Only add the delete button if in workspace
+    // Only add delete button if it's in the workspace
     if (isWorkspaceBlock) {
       const deleteButton = document.createElement("button");
       deleteButton.className = "delete-button";
       deleteButton.innerText = "X";
       deleteButton.onclick = () => block.remove();
       block.appendChild(deleteButton);
+    }
 
-      // Draggable
-      block.draggable = true;
-      block.ondragstart = (ev) => {
-        ev.dataTransfer.setData("blockType", blockType);
-      };
+    // Toolbox or workspace, we still want to let you drag the reporter around
+    block.draggable = true;
+    block.ondragstart = (ev) => {
+      ev.dataTransfer.setData("blockType", blockType);
+    };
 
-      // On click, show a tiny "value" popup
+    // Optionally show a “tooltip” on click (example)
+    if (isWorkspaceBlock) {
       block.onclick = () => {
-        // remove old popup
         let existing = block.querySelector(".reporter-message");
         if (existing) existing.remove();
 
@@ -435,15 +426,7 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
 
         setTimeout(() => msg.remove(), 2000);
       };
-
-    } else {
-      // Toolbox version: just draggable
-      block.draggable = true;
-      block.ondragstart = (ev) => {
-        ev.dataTransfer.setData("blockType", blockType);
-      };
     }
-
     return block;
   }
 
@@ -455,7 +438,6 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
 
     if (blockType === "repeat") {
       inputArea.appendChild(document.createTextNode("Repeat "));
-      // We'll place the text field (or reporter) in a wrapper
       const inputWrapper = document.createElement("div");
       inputWrapper.className = "input-wrapper";
       inputWrapper.dataset.inputName = "input1";
@@ -466,7 +448,10 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
       inputWrapper.ondrop = (e) => {
         e.preventDefault();
         const droppedType = e.dataTransfer.getData("blockType");
-        if (blockDefinitions[droppedType] && blockDefinitions[droppedType].block_type === "reporter") {
+        if (
+          blockDefinitions[droppedType] &&
+          blockDefinitions[droppedType].block_type === "reporter"
+        ) {
           const newReporter = createBlockElement(droppedType, true);
           inputWrapper.innerHTML = "";
           inputWrapper.appendChild(newReporter);
@@ -504,8 +489,8 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
       }
     };
     block.appendChild(innerContainer);
-
-  } else {
+  } 
+  else {
     // Normal (stack) block
     block.className = isWorkspaceBlock ? "workspace-block" : "block";
     const inputArea = document.createElement("div");
@@ -524,7 +509,10 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
         inputWrapper.ondrop = (e) => {
           e.preventDefault();
           const droppedType = e.dataTransfer.getData("blockType");
-          if (blockDefinitions[droppedType] && blockDefinitions[droppedType].block_type === "reporter") {
+          if (
+            blockDefinitions[droppedType] &&
+            blockDefinitions[droppedType].block_type === "reporter"
+          ) {
             const newReporter = createBlockElement(droppedType, true);
             inputWrapper.innerHTML = "";
             inputWrapper.appendChild(newReporter);
@@ -565,7 +553,10 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
         inputWrapper.ondrop = (e) => {
           e.preventDefault();
           const droppedType = e.dataTransfer.getData("blockType");
-          if (blockDefinitions[droppedType] && blockDefinitions[droppedType].block_type === "reporter") {
+          if (
+            blockDefinitions[droppedType] &&
+            blockDefinitions[droppedType].block_type === "reporter"
+          ) {
             const newReporter = createBlockElement(droppedType, true);
             inputWrapper.innerHTML = "";
             inputWrapper.appendChild(newReporter);
@@ -598,8 +589,15 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
     deleteButton.innerText = "X";
     deleteButton.onclick = () => block.remove();
     block.appendChild(deleteButton);
-  } else if (!isWorkspaceBlock) {
-    // Toolbox version: draggable only
+  }
+
+  // If it's in the toolbox, we set up basic "dragstart" so you can drag it into the workspace
+  // If it's in the workspace, we set up the "makeDraggableAndSnappable" so you can reposition it.
+  if (isWorkspaceBlock) {
+    // Actually let user re-position the block:
+    makeDraggableAndSnappable(block);
+  } else {
+    // Toolbox version:
     block.draggable = true;
     block.ondragstart = (ev) => {
       ev.dataTransfer.setData("blockType", blockType);
@@ -611,6 +609,7 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
 
 /* =============================
    Drop handler for workspace
+   (Used when dragging from toolbox → workspace)
    ============================= */
 function dropBlock(event, dropTarget) {
   event.preventDefault();
@@ -635,7 +634,7 @@ window.addEventListener("DOMContentLoaded", () => {
 /* =============================
    RE-INITIALIZE LOADED BLOCKS
    (makes sure all blocks have correct classes, 
-    delete buttons if needed, drag+drop, etc.)
+    delete buttons, drag+drop, etc.)
    ============================= */
 function reinitLoadedBlocks(container) {
   container.querySelectorAll(".workspace-block, .c-block, .workspace-reporter").forEach(block => {
@@ -679,10 +678,54 @@ function reinitLoadedBlocks(container) {
       block.appendChild(deleteButton);
     }
 
-    // Make it draggable
-    block.draggable = true;
-    block.ondragstart = (ev) => {
-      ev.dataTransfer.setData("blockType", blockType);
-    };
+    // Re-enable draggable + snapping
+    makeDraggableAndSnappable(block);
+  });
+}
+
+/* =============================
+   Make block draggable + snap to grid
+   ============================= */
+function makeDraggableAndSnappable(block) {
+  block.draggable = true;
+
+  let offsetX = 0, offsetY = 0;
+
+  block.addEventListener("dragstart", (e) => {
+    // e.offsetX/Y inside the block
+    offsetX = e.offsetX;
+    offsetY = e.offsetY;
+  });
+
+  block.addEventListener("dragend", (e) => {
+    const workspace = document.getElementById("workspace");
+    
+    // Coordinates relative to the workspace container
+    const bounds = workspace.getBoundingClientRect();
+    let x = e.pageX - bounds.left - offsetX;
+    let y = e.pageY - bounds.top - offsetY;
+    
+    // Snap to 20px grid
+    const gridSize = 20;
+    x = Math.round(x / gridSize) * gridSize;
+    y = Math.round(y / gridSize) * gridSize;
+
+    // Constrain to workspace boundaries (optional)
+    if (x < 0) x = 0;
+    if (y < 0) y = 0;
+    const maxX = workspace.scrollWidth - block.offsetWidth;
+    const maxY = workspace.scrollHeight - block.offsetHeight;
+    if (x > maxX) x = maxX;
+    if (y > maxY) y = maxY;
+
+    // Position absolutely
+    block.style.position = "absolute";
+    block.style.left = x + "px";
+    block.style.top = y + "px";
+
+    // Ensure the block stays a direct child of #workspace
+    if (block.parentNode !== workspace) {
+      workspace.appendChild(block);
+    }
   });
 }
