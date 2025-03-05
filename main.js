@@ -104,109 +104,116 @@ let pickingBlock = null;
 let pickingInputName = "";
 
 /* ========== Costume Manager Logic ========== */
-const openManagerBtn = document.getElementById("open-costume-manager");
-const costumeManager = document.getElementById("costume-manager");
-const costumeList = document.getElementById("costume-list");
-const addCostumeBtn = document.getElementById("add-costume-btn");
-const closeCostumeBtn = document.getElementById("close-costume-btn");
+// Wrap all DOM-dependent costume manager code in DOMContentLoaded
+window.addEventListener("DOMContentLoaded", () => {
+  const openManagerBtn = document.getElementById("open-costume-manager");
+  const costumeManager = document.getElementById("costume-manager");
+  const costumeList = document.getElementById("costume-list");
+  const addCostumeBtn = document.getElementById("add-costume-btn");
+  const closeCostumeBtn = document.getElementById("close-costume-btn");
 
-// Ensure the costume manager is hidden on site load
-costumeManager.classList.add("hidden");
-
-// Open Costume Manager
-openManagerBtn.addEventListener("click", () => {
-  // Disable picking mode
-  isPickerMode = false;
-  pickingBlock = null;
-  pickingInputName = "";
-
-  renderCostumeList();
-  costumeManager.classList.remove("hidden");
-});
-
-// Close Costume Manager
-closeCostumeBtn.addEventListener("click", () => {
+  // Ensure the costume manager is hidden on site load
   costumeManager.classList.add("hidden");
-  isPickerMode = false;
-});
 
-// Add a new costume
-addCostumeBtn.addEventListener("click", () => {
-  const fileInput = document.createElement("input");
-  fileInput.type = "file";
-  fileInput.accept = "image/*";
-  fileInput.onchange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const dataURL = evt.target.result;
-      costumes.push({
-        name: file.name,
-        data: dataURL
-      });
-      renderCostumeList();
-    };
-    reader.readAsDataURL(file);
-  };
-  fileInput.click();
-});
+  // Open Costume Manager
+  openManagerBtn.addEventListener("click", () => {
+    // Disable picking mode
+    isPickerMode = false;
+    pickingBlock = null;
+    pickingInputName = "";
 
-// Render the costume list in the manager
-function renderCostumeList() {
-  costumeList.innerHTML = "";
-
-  costumes.forEach((c, i) => {
-    const costumeItem = document.createElement("div");
-    costumeItem.classList.add("costume-item");
-
-    const img = document.createElement("img");
-    img.src = c.data;
-    img.alt = c.name;
-
-    // Delete button
-    const deleteBtn = document.createElement("button");
-    deleteBtn.innerText = "X";
-    deleteBtn.classList.add("delete-costume-btn");
-    deleteBtn.onclick = () => {
-      costumes.splice(i, 1);
-      renderCostumeList();
-    };
-
-    costumeItem.appendChild(img);
-    costumeItem.appendChild(deleteBtn);
-
-    // If we're in "picking" mode, allow clicking to choose
-    if (isPickerMode) {
-      costumeItem.style.cursor = "pointer";
-      costumeItem.onclick = () => {
-        pickCostume(c);
-      };
-    }
-
-    costumeList.appendChild(costumeItem);
+    renderCostumeList();
+    costumeManager.classList.remove("hidden");
   });
-}
 
-function pickCostume(c) {
-  if (pickingBlock) {
-    // Update the appropriate input field in the block
-    const inputContainer = pickingBlock.querySelector(".block-inputs");
-    if (inputContainer) {
-      const field = inputContainer.querySelector(
-        `[data-input-name='${pickingInputName}']`
-      );
-      if (field) {
-        field.value = c.name;
+  // Close Costume Manager
+  closeCostumeBtn.addEventListener("click", () => {
+    costumeManager.classList.add("hidden");
+    isPickerMode = false;
+  });
+
+  // Add a new costume
+  addCostumeBtn.addEventListener("click", () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const dataURL = evt.target.result;
+        costumes.push({
+          name: file.name,
+          data: dataURL
+        });
+        renderCostumeList();
+      };
+      reader.readAsDataURL(file);
+    };
+    fileInput.click();
+  });
+
+  // Render the costume list in the manager
+  function renderCostumeList() {
+    costumeList.innerHTML = "";
+
+    costumes.forEach((c, i) => {
+      const costumeItem = document.createElement("div");
+      costumeItem.classList.add("costume-item");
+
+      const img = document.createElement("img");
+      img.src = c.data;
+      img.alt = c.name;
+
+      // Delete button
+      const deleteBtn = document.createElement("button");
+      deleteBtn.innerText = "X";
+      deleteBtn.classList.add("delete-costume-btn");
+      deleteBtn.onclick = () => {
+        costumes.splice(i, 1);
+        renderCostumeList();
+      };
+
+      costumeItem.appendChild(img);
+      costumeItem.appendChild(deleteBtn);
+
+      // If we're in "picking" mode, allow clicking to choose
+      if (isPickerMode) {
+        costumeItem.style.cursor = "pointer";
+        costumeItem.onclick = () => {
+          pickCostume(c);
+        };
+      }
+
+      costumeList.appendChild(costumeItem);
+    });
+  }
+
+  // Expose pickCostume globally so other parts of the code can call it
+  window.pickCostume = function(c) {
+    if (pickingBlock) {
+      // Update the appropriate input field in the block
+      const inputContainer = pickingBlock.querySelector(".block-inputs");
+      if (inputContainer) {
+        const field = inputContainer.querySelector(
+          `[data-input-name='${pickingInputName}']`
+        );
+        if (field) {
+          field.value = c.name;
+        }
       }
     }
-  }
-  // Reset picking mode
-  isPickerMode = false;
-  pickingBlock = null;
-  pickingInputName = "";
-  costumeManager.classList.add("hidden");
-}
+    // Reset picking mode
+    isPickerMode = false;
+    pickingBlock = null;
+    pickingInputName = "";
+    costumeManager.classList.add("hidden");
+  };
+
+  // Expose renderCostumeList if needed elsewhere
+  window.renderCostumeList = renderCostumeList;
+});
 
 /* =============================
    Extract input fields
@@ -538,7 +545,8 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
           pickingBlock = block;
           pickingInputName = part;
           renderCostumeList();
-          costumeManager.classList.remove("hidden");
+          // Note: costumeManager is within the DOMContentLoaded scope so we access it via querySelector
+          document.getElementById("costume-manager").classList.remove("hidden");
         };
         inputWrapper.appendChild(pickBtn);
 
