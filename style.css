@@ -137,7 +137,6 @@
   
   /* Toolbox blocks (blue-ish) */
   .block {
-    /* Smaller size */
     font-size: 12px;
     display: inline-block;
     padding: 4px 8px;
@@ -205,7 +204,7 @@
     display: inline-block;
     background-color: #3498db;
     border: 2px solid #2980b9;
-    border-radius: 9999px; /* pill shape */
+    border-radius: 9999px;
     padding: 4px 12px;
     margin: 5px;
     color: #fff;
@@ -295,7 +294,8 @@
   /* =============================
      4) COSTUME MANAGER MODAL
      ============================= */
-  .hidden {
+  /* Update the hidden rule to increase specificity so it overrides display:flex */
+  #costume-manager.hidden {
     display: none;
   }
   #costume-manager {
