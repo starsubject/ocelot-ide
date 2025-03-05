@@ -110,6 +110,9 @@ const costumeList = document.getElementById("costume-list");
 const addCostumeBtn = document.getElementById("add-costume-btn");
 const closeCostumeBtn = document.getElementById("close-costume-btn");
 
+// Ensure the costume manager is hidden on site load
+costumeManager.classList.add("hidden");
+
 // Open Costume Manager
 openManagerBtn.addEventListener("click", () => {
   // Disable picking mode
@@ -729,4 +732,3 @@ function makeDraggableAndSnappable(block) {
     }
   });
 }
-//
