@@ -1,5 +1,6 @@
-Ocelot-IDE  2024-2025
+# Welcome to Ocelot-IDE source code!
 
-Homepage and non editor involved files assisted by AI. Other pages HTML CSS completely coded by me.
+✋ Ocelot-IDE is currently in mid alpha.
+🤖 Editor is AI-assisted, rest of the respiratory is still coded by me, tho.
 
-@Ocelotlabs is just me.
+## Documentation (upcoming):
