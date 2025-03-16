@@ -50,11 +50,12 @@
         <input type="password" id="password" placeholder="Password">
         <button onclick="checkPassword()">Submit</button>
         <p id="error-message" style="color: red; display: none;">Incorrect Password</p>
+        <h3>Want access? Contact <a href="https://scratch.mit.edu/users/starsubject></a> and ask for access.</h3>
     </div>
 
     <script>
         function checkPassword() {
-            const correctPassword = "OCELOT2025";  // CHANGE THIS
+            const correctPassword = "helpme";
             const userInput = document.getElementById("password").value;
 
             if (userInput === correctPassword) {
