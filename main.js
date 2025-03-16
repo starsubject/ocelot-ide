@@ -1,3 +1,5 @@
+ // main.js
+
 // We assume "window.blockDefinitions" is already set 
 // by blockDefinitions.js (which is loaded first in index.html).
 // Let's alias it for convenience:
@@ -104,116 +106,106 @@ let pickingBlock = null;
 let pickingInputName = "";
 
 /* ========== Costume Manager Logic ========== */
-// Wrap all DOM-dependent costume manager code in DOMContentLoaded
-window.addEventListener("DOMContentLoaded", () => {
-  const openManagerBtn = document.getElementById("open-costume-manager");
-  const costumeManager = document.getElementById("costume-manager");
-  const costumeList = document.getElementById("costume-list");
-  const addCostumeBtn = document.getElementById("add-costume-btn");
-  const closeCostumeBtn = document.getElementById("close-costume-btn");
+const openManagerBtn = document.getElementById("open-costume-manager");
+const costumeManager = document.getElementById("costume-manager");
+const costumeList = document.getElementById("costume-list");
+const addCostumeBtn = document.getElementById("add-costume-btn");
+const closeCostumeBtn = document.getElementById("close-costume-btn");
 
-  // Ensure the costume manager is hidden on site load
+// Open Costume Manager
+openManagerBtn.addEventListener("click", () => {
+  // Disable picking mode
+  isPickerMode = false;
+  pickingBlock = null;
+  pickingInputName = "";
+
+  renderCostumeList();
+  costumeManager.classList.remove("hidden");
+});
+
+// Close Costume Manager
+closeCostumeBtn.addEventListener("click", () => {
   costumeManager.classList.add("hidden");
+  isPickerMode = false;
+});
 
-  // Open Costume Manager
-  openManagerBtn.addEventListener("click", () => {
-    // Disable picking mode
-    isPickerMode = false;
-    pickingBlock = null;
-    pickingInputName = "";
-
-    renderCostumeList();
-    costumeManager.classList.remove("hidden");
-  });
-
-  // Close Costume Manager
-  closeCostumeBtn.addEventListener("click", () => {
-    costumeManager.classList.add("hidden");
-    isPickerMode = false;
-  });
-
-  // Add a new costume
-  addCostumeBtn.addEventListener("click", () => {
-    const fileInput = document.createElement("input");
-    fileInput.type = "file";
-    fileInput.accept = "image/*";
-    fileInput.onchange = (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        const dataURL = evt.target.result;
-        costumes.push({
-          name: file.name,
-          data: dataURL
-        });
-        renderCostumeList();
-      };
-      reader.readAsDataURL(file);
+// Add a new costume
+addCostumeBtn.addEventListener("click", () => {
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = "image/*";
+  fileInput.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const dataURL = evt.target.result;
+      costumes.push({
+        name: file.name,
+        data: dataURL
+      });
+      renderCostumeList();
     };
-    fileInput.click();
-  });
+    reader.readAsDataURL(file);
+  };
+  fileInput.click();
+});
 
-  // Render the costume list in the manager
-  function renderCostumeList() {
-    costumeList.innerHTML = "";
+// Render the costume list in the manager
+function renderCostumeList() {
+  costumeList.innerHTML = "";
 
-    costumes.forEach((c, i) => {
-      const costumeItem = document.createElement("div");
-      costumeItem.classList.add("costume-item");
+  costumes.forEach((c, i) => {
+    const costumeItem = document.createElement("div");
+    costumeItem.classList.add("costume-item");
 
-      const img = document.createElement("img");
-      img.src = c.data;
-      img.alt = c.name;
+    const img = document.createElement("img");
+    img.src = c.data;
+    img.alt = c.name;
 
-      // Delete button
-      const deleteBtn = document.createElement("button");
-      deleteBtn.innerText = "X";
-      deleteBtn.classList.add("delete-costume-btn");
-      deleteBtn.onclick = () => {
-        costumes.splice(i, 1);
-        renderCostumeList();
+    // Delete button
+    const deleteBtn = document.createElement("button");
+    deleteBtn.innerText = "X";
+    deleteBtn.classList.add("delete-costume-btn");
+    deleteBtn.onclick = () => {
+      costumes.splice(i, 1);
+      renderCostumeList();
+    };
+
+    costumeItem.appendChild(img);
+    costumeItem.appendChild(deleteBtn);
+
+    // If we're in "picking" mode, allow clicking to choose
+    if (isPickerMode) {
+      costumeItem.style.cursor = "pointer";
+      costumeItem.onclick = () => {
+        pickCostume(c);
       };
+    }
 
-      costumeItem.appendChild(img);
-      costumeItem.appendChild(deleteBtn);
+    costumeList.appendChild(costumeItem);
+  });
+}
 
-      // If we're in "picking" mode, allow clicking to choose
-      if (isPickerMode) {
-        costumeItem.style.cursor = "pointer";
-        costumeItem.onclick = () => {
-          pickCostume(c);
-        };
-      }
-
-      costumeList.appendChild(costumeItem);
-    });
-  }
-
-  // Expose pickCostume globally so other parts of the code can call it
-  window.pickCostume = function(c) {
-    if (pickingBlock) {
-      // Update the appropriate input field in the block
-      const inputContainer = pickingBlock.querySelector(".block-inputs");
-      if (inputContainer) {
-        const field = inputContainer.querySelector(
-          `[data-input-name='${pickingInputName}']`
-        );
-        if (field) {
-          field.value = c.name;
-        }
+function pickCostume(c) {
+  if (pickingBlock) {
+    // Update the appropriate input field in the block
+    const inputContainer = pickingBlock.querySelector(".block-inputs");
+    if (inputContainer) {
+      const field = inputContainer.querySelector(
+        `[data-input-name='${pickingInputName}']`
+      );
+      if (field) {
+        field.value = c.name;
       }
     }
-    // Reset picking mode
-    isPickerMode = false;
-    pickingBlock = null;
-    pickingInputName = "";
-    costumeManager.classList.add("hidden");
-  };
-
-  // Expose renderCostumeList if needed elsewhere
-  window.renderCostumeList = renderCostumeList;
-});
+  }
+  // Reset picking mode
+  isPickerMode = false;
+  pickingBlock = null;
+  pickingInputName = "";
+  costumeManager.classList.add("hidden");
+}
 
 /* =============================
    Extract input fields
@@ -221,47 +213,37 @@ window.addEventListener("DOMContentLoaded", () => {
    ============================= */
 function getInputs(block) {
   const inputs = {};
+  // Instead of scanning the ENTIRE subtree, we only get direct inputs 
+  // inside THIS block's .block-inputs, ignoring child blocks' inputs.
+  const directInputArea = block.querySelector(":scope > .block-inputs");
+  if (!directInputArea) {
+    // If there's no direct .block-inputs at this level, no inputs
+    return inputs;
+  }
 
-  // 1) Only get the direct .block-inputs container for this block
-  const parentBlockInputs = block.querySelector(":scope > .block-inputs");
-  if (!parentBlockInputs) return inputs;
-
-  // 2) Within that container, find all .input-wrapper
-  const inputWrappers = parentBlockInputs.querySelectorAll(".input-wrapper");
+  // Only gather input wrappers INSIDE this block's .block-inputs
+  const inputWrappers = directInputArea.querySelectorAll(".input-wrapper");
 
   inputWrappers.forEach(wrapper => {
     const inputName = wrapper.dataset.inputName;
     if (!inputName) return;
 
-    // If there's a reporter block inside this wrapper
     const reporterBlock = wrapper.querySelector(".workspace-reporter");
-
-    // If there's a normal/c-block in the input wrapper by mistake:
-    const nonReporter = wrapper.querySelector(".workspace-block, .c-block");
-    const parentDef = blockDefinitions[block.dataset.blockType] || {};
-
-    // If a non-reporter block is in the input wrapper, ignore it & use typed text
-    if (nonReporter && !nonReporter.classList.contains("workspace-reporter")) {
-      const textInput = wrapper.querySelector("input");
-      inputs[inputName] = textInput ? textInput.value : "";
-      return;
-    }
-
-    // If we found a reporter block
     if (reporterBlock) {
-      // If parent is a c-block, ignore reporter
-      if (parentDef.block_type === "c-block") {
-        const textInput = wrapper.querySelector("input");
-        inputs[inputName] = textInput ? textInput.value : "";
-      } else {
-        const { realCode } = executeBlock(reporterBlock);
-        inputs[inputName] = realCode;
-      }
+      // Evaluate the reporter block to get 'realCode'
+      const { realCode } = executeBlock(reporterBlock);
+      inputs[inputName] = realCode;
     } else {
-      // Just a normal input
       const textInput = wrapper.querySelector("input");
-      inputs[inputName] = textInput ? textInput.value : "";
+      if (textInput) {
+        inputs[inputName] = textInput.value.trim(); // Ensure no accidental spaces
+      } else {
+        inputs[inputName] = "";
+      }
     }
+    console.log(
+      `getInputs - Block: "${block.dataset.blockType}", inputName: "${inputName}", Value: "${inputs[inputName]}"`
+    );
   });
 
   return inputs;
@@ -275,15 +257,20 @@ function executeBlock(block, depth = 0) {
   const def = blockDefinitions[type];
   if (!def) return { realCode: "", displayCode: "" };
 
-  // Gather "this block's" inputs
+  // Collect only THIS block's direct input values
   const inputs = getInputs(block);
 
-  // Then gather "child blocks" from the .inner container 
+  // 🔍 Debug: Log block type and input values
+  console.log(`Executing block: "${type}", Inputs:`, inputs);
+
+  // If it has a .inner container, gather child blocks
   const childBlocks = block.querySelector(".inner")
     ? [...block.querySelector(".inner").children]
     : [];
+  // Recursively get code from child blocks
   const childData = childBlocks.map(cb => executeBlock(cb, depth + 1));
 
+  // Finally, let the block definition create the realCode + displayCode
   return def.execute(inputs, childData, depth);
 }
 
@@ -299,7 +286,6 @@ function executeBlocks() {
   let realCodeAll = "let __globalSafetyCount = 0;\n";
   let displayCodeAll = "";
   
-  // Clear the canvas if any
   const canvas = document.getElementById("graphics-canvas");
   if (canvas) {
     const ctx = canvas.getContext("2d");
@@ -316,6 +302,7 @@ function executeBlocks() {
   // Show final JS code for debugging
   document.getElementById("generated-code").textContent = displayCodeAll.trim();
 
+  // Execute the generated code
   try {
     eval(realCodeAll);
   } catch (e) {
@@ -328,7 +315,6 @@ function executeBlocks() {
       location.reload(); // Reload the page only if workspace vanishes
     }
   }
-
   // Delay workspace check slightly
   setTimeout(checkWorkspace, 500);
 }
@@ -352,8 +338,16 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
   if (blockData.block_type === "reporter") {
     // Use "workspace-reporter" if in workspace, "reporter-block" if in toolbox
     block.className = isWorkspaceBlock ? "workspace-reporter" : "reporter-block";
-    
-    // Format the reporter pill
+    block.style.borderRadius = "10px";
+    block.style.padding = "5px 10px";
+    block.style.backgroundColor = "#3498db"; // Blue
+    block.style.color = "white";
+    block.style.cursor = "pointer";
+    block.style.display = "inline-block";
+    block.style.position = "relative"; // for small popups
+
+    // If the format includes input placeholders, build them 
+    // (Example: ["Value", "input1"])
     const inputArea = document.createElement("div");
     inputArea.classList.add("block-inputs");
 
@@ -370,21 +364,20 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
         inputWrapper.ondrop = (e) => {
           e.preventDefault();
           const droppedType = e.dataTransfer.getData("blockType");
-          // if a reporter is dropped here, nest it
-          if (
-            blockDefinitions[droppedType] &&
-            blockDefinitions[droppedType].block_type === "reporter"
-          ) {
+          // if a reporter is dropped here, we nest it
+          if (blockDefinitions[droppedType] && blockDefinitions[droppedType].block_type === "reporter") {
             const newReporter = createBlockElement(droppedType, true);
             inputWrapper.innerHTML = "";
             inputWrapper.appendChild(newReporter);
           }
         };
 
+        // A small text input for the reporter's value
         const field = document.createElement("input");
         field.type = "text";
         field.className = "input-field";
         field.dataset.inputName = part;
+        // If the block definition has a default number, show that as string
         field.value = blockData[part + "_default"] || "";
         inputWrapper.appendChild(field);
         inputArea.appendChild(inputWrapper);
@@ -396,26 +389,26 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
         inputArea.appendChild(labelSpan);
       }
     });
+
     block.appendChild(inputArea);
 
-    // Only add delete button if it's in the workspace
+    // Only add the delete button if in workspace
     if (isWorkspaceBlock) {
       const deleteButton = document.createElement("button");
       deleteButton.className = "delete-button";
       deleteButton.innerText = "X";
       deleteButton.onclick = () => block.remove();
       block.appendChild(deleteButton);
-    }
 
-    // Toolbox or workspace, we still want to let you drag the reporter around
-    block.draggable = true;
-    block.ondragstart = (ev) => {
-      ev.dataTransfer.setData("blockType", blockType);
-    };
+      // Draggable
+      block.draggable = true;
+      block.ondragstart = (ev) => {
+        ev.dataTransfer.setData("blockType", blockType);
+      };
 
-    // Optionally show a “tooltip” on click (example)
-    if (isWorkspaceBlock) {
+      // On click, show a tiny "value" popup
       block.onclick = () => {
+        // remove old popup
         let existing = block.querySelector(".reporter-message");
         if (existing) existing.remove();
 
@@ -436,7 +429,15 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
 
         setTimeout(() => msg.remove(), 2000);
       };
+
+    } else {
+      // Toolbox version: just draggable
+      block.draggable = true;
+      block.ondragstart = (ev) => {
+        ev.dataTransfer.setData("blockType", blockType);
+      };
     }
+
     return block;
   }
 
@@ -448,6 +449,7 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
 
     if (blockType === "repeat") {
       inputArea.appendChild(document.createTextNode("Repeat "));
+      // We'll place the text field (or reporter) in a wrapper
       const inputWrapper = document.createElement("div");
       inputWrapper.className = "input-wrapper";
       inputWrapper.dataset.inputName = "input1";
@@ -458,10 +460,7 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
       inputWrapper.ondrop = (e) => {
         e.preventDefault();
         const droppedType = e.dataTransfer.getData("blockType");
-        if (
-          blockDefinitions[droppedType] &&
-          blockDefinitions[droppedType].block_type === "reporter"
-        ) {
+        if (blockDefinitions[droppedType] && blockDefinitions[droppedType].block_type === "reporter") {
           const newReporter = createBlockElement(droppedType, true);
           inputWrapper.innerHTML = "";
           inputWrapper.appendChild(newReporter);
@@ -471,7 +470,6 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
       const inputField = document.createElement("input");
       inputField.type = "text";
       inputField.className = "input-field";
-      // Show default, e.g. "3"
       inputField.value = blockData.input1_default;
       inputField.dataset.inputName = "input1";
       inputWrapper.appendChild(inputField);
@@ -499,8 +497,8 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
       }
     };
     block.appendChild(innerContainer);
-  } 
-  else {
+
+  } else {
     // Normal (stack) block
     block.className = isWorkspaceBlock ? "workspace-block" : "block";
     const inputArea = document.createElement("div");
@@ -519,10 +517,7 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
         inputWrapper.ondrop = (e) => {
           e.preventDefault();
           const droppedType = e.dataTransfer.getData("blockType");
-          if (
-            blockDefinitions[droppedType] &&
-            blockDefinitions[droppedType].block_type === "reporter"
-          ) {
+          if (blockDefinitions[droppedType] && blockDefinitions[droppedType].block_type === "reporter") {
             const newReporter = createBlockElement(droppedType, true);
             inputWrapper.innerHTML = "";
             inputWrapper.appendChild(newReporter);
@@ -545,8 +540,7 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
           pickingBlock = block;
           pickingInputName = part;
           renderCostumeList();
-          // Note: costumeManager is within the DOMContentLoaded scope so we access it via querySelector
-          document.getElementById("costume-manager").classList.remove("hidden");
+          costumeManager.classList.remove("hidden");
         };
         inputWrapper.appendChild(pickBtn);
 
@@ -564,10 +558,7 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
         inputWrapper.ondrop = (e) => {
           e.preventDefault();
           const droppedType = e.dataTransfer.getData("blockType");
-          if (
-            blockDefinitions[droppedType] &&
-            blockDefinitions[droppedType].block_type === "reporter"
-          ) {
+          if (blockDefinitions[droppedType] && blockDefinitions[droppedType].block_type === "reporter") {
             const newReporter = createBlockElement(droppedType, true);
             inputWrapper.innerHTML = "";
             inputWrapper.appendChild(newReporter);
@@ -600,15 +591,8 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
     deleteButton.innerText = "X";
     deleteButton.onclick = () => block.remove();
     block.appendChild(deleteButton);
-  }
-
-  // If it's in the toolbox, we set up basic "dragstart" so you can drag it into the workspace
-  // If it's in the workspace, we set up the "makeDraggableAndSnappable" so you can reposition it.
-  if (isWorkspaceBlock) {
-    // Actually let user re-position the block:
-    makeDraggableAndSnappable(block);
-  } else {
-    // Toolbox version:
+  } else if (!isWorkspaceBlock) {
+    // Toolbox version: draggable only
     block.draggable = true;
     block.ondragstart = (ev) => {
       ev.dataTransfer.setData("blockType", blockType);
@@ -620,7 +604,6 @@ function createBlockElement(blockType, isWorkspaceBlock = false) {
 
 /* =============================
    Drop handler for workspace
-   (Used when dragging from toolbox → workspace)
    ============================= */
 function dropBlock(event, dropTarget) {
   event.preventDefault();
@@ -645,7 +628,7 @@ window.addEventListener("DOMContentLoaded", () => {
 /* =============================
    RE-INITIALIZE LOADED BLOCKS
    (makes sure all blocks have correct classes, 
-    delete buttons, drag+drop, etc.)
+    delete buttons if needed, drag+drop, etc.)
    ============================= */
 function reinitLoadedBlocks(container) {
   container.querySelectorAll(".workspace-block, .c-block, .workspace-reporter").forEach(block => {
@@ -689,54 +672,10 @@ function reinitLoadedBlocks(container) {
       block.appendChild(deleteButton);
     }
 
-    // Re-enable draggable + snapping
-    makeDraggableAndSnappable(block);
-  });
-}
-
-/* =============================
-   Make block draggable + snap to grid
-   ============================= */
-function makeDraggableAndSnappable(block) {
-  block.draggable = true;
-
-  let offsetX = 0, offsetY = 0;
-
-  block.addEventListener("dragstart", (e) => {
-    // e.offsetX/Y inside the block
-    offsetX = e.offsetX;
-    offsetY = e.offsetY;
-  });
-
-  block.addEventListener("dragend", (e) => {
-    const workspace = document.getElementById("workspace");
-    
-    // Coordinates relative to the workspace container
-    const bounds = workspace.getBoundingClientRect();
-    let x = e.pageX - bounds.left - offsetX;
-    let y = e.pageY - bounds.top - offsetY;
-    
-    // Snap to 20px grid
-    const gridSize = 20;
-    x = Math.round(x / gridSize) * gridSize;
-    y = Math.round(y / gridSize) * gridSize;
-
-    // Constrain to workspace boundaries (optional)
-    if (x < 0) x = 0;
-    if (y < 0) y = 0;
-    const maxX = workspace.scrollWidth - block.offsetWidth;
-    const maxY = workspace.scrollHeight - block.offsetHeight;
-    if (x > maxX) x = maxX;
-    if (y > maxY) y = maxY;
-
-    // Position absolutely
-    block.style.position = "absolute";
-    block.style.left = x + "px";
-    block.style.top = y + "px";
-
-    // Ensure the block stays a direct child of #workspace
-    if (block.parentNode !== workspace) {
-      workspace.appendChild(block);
-    }
+    // Make it draggable
+    block.draggable = true;
+    block.ondragstart = (ev) => {
+      ev.dataTransfer.setData("blockType", blockType);
+    };
   });
 }
